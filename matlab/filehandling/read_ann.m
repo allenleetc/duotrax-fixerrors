@@ -20,6 +20,45 @@
 % background_center, background_dev, movie_height, movie_width
 function varargout = read_ann(filename,varargin)
 
+[p,f,e] = fileparts(filename);
+filenameS = [f e];
+if strcmp(filenameS,'roidata.mat')
+  roifname = fullfile(p,[f e]);
+  tdfname = fullfile(p,'trackingdata.mat');
+  bgfname = fullfile(p,'bgdata.mat');
+  fprintf(1,'Fake read_ann from %s/%s/%s.\n',roifname,tdfname,bgfname);  
+  roi = load(roifname);
+  td = load(tdfname);
+  bg = load(bgfname);
+  tdparams = td.params;
+  
+  s = struct();
+  s.center_dampen = tdparams.err_dampen_pos;  
+  s.angle_dampen = tdparams.err_dampen_theta;
+  s.max_jump = nan;
+  s.maxmajor = nan;
+  s.meanmajor = nan;
+  s.velocity_angle_weight = nan; % for ID
+  s.ang_dist_wt = nan; % for ID
+  s.arena_radius = roi.radii;
+  s.arena_center_x = roi.centerx;
+  s.arena_center_y = roi.centery;
+  s.do_set_circular_arena = 1;
+  s.bg_algorithm = 'median';
+  s.background_median = bg.bgmed;
+  s.background_mean = [];
+  s.bg_type = 'dark_on_light';
+  s.n_bg_std_thresh_low = nan;
+  
+  varargout = cell(size(varargin));
+  for i=1:nargout
+    varargout{i} = s.(varargin{i});
+  end
+  return;
+end
+  
+  
+  
 if nargin == 1,
   readall = true;
 else
