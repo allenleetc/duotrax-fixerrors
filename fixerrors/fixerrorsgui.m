@@ -185,7 +185,8 @@ guidata(hObject, handles);
 fix_Play(handles,handles.figure1);
 
 % UIWAIT makes fixerrorsgui wait for user response (see UIRESUME)
-uiwait(handles.figure1);
+%AL
+%uiwait(handles.figure1);
 
 
 function InitializeKeyPressFcns(handles)
@@ -218,6 +219,10 @@ function varargout = fixerrorsgui_OutputFcn(hObject, eventdata, handles)
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% AL
+varargout{1} = handles.figure1;
+return;
 
 % Get default command line output from handles structure
 deletetrx = [];
@@ -286,7 +291,7 @@ hleft = plot(0,0,'o','markersize',6,'color',color,'markerfacecolor','w');
 set(hleft,'buttondownfcn','fixerrorsgui(''left_buttondown'',gcbo,[],guidata(gcbo))');
 hright = plot(0,0,'o','markersize',6,'color',color,'markerfacecolor','w');
 set(hright,'buttondownfcn','fixerrorsgui(''right_buttondown'',gcbo,[],guidata(gcbo))');
-hhead = plot(0,0,'o','markersize',6,'color',color,'markerfacecolor','w');
+hhead = plot(0,0,'o','markersize',6,'color',color,'markerfacecolor','r');
 set(hhead,'buttondownfcn','fixerrorsgui(''head_buttondown'',gcbo,[],guidata(gcbo))');
 htail = plot(0,0,'o','markersize',6,'color',color,'markerfacecolor','w');
 set(htail,'buttondownfcn','fixerrorsgui(''tail_buttondown'',gcbo,[],guidata(gcbo))');
@@ -651,7 +656,7 @@ for i = 1:length(handles.seqs),
   if strcmpi(handles.seqs(i).type,nexttype),
     
     % store frames, flies, suspiciousness for this seq
-    if strcmpi(nexttype,'swap'),
+    if strcmpi(nexttype,'swap') || strcmpi(nexttype,'touch')
       flies(end+1) = handles.seqs(i).flies(1)*handles.nflies+handles.seqs(i).flies(2);
     else
       flies(end+1) = handles.seqs(i).flies;
@@ -676,7 +681,7 @@ elseif strcmpi(sortby,'frame number'),
   j = argmin(frames);
   handles = fix_SetSeq(handles,idx(j));
 elseif strcmpi(sortby,'fly'),
-  if strcmpi(handles.seq.type,'swap'),
+  if strcmpi(handles.seq.type,'swap') || strcmpi(handles.seq.type,'touch') 
     currfly = handles.seq.flies(1)*handles.nflies +handles.seq.flies(2);
   else
     currfly = handles.seq.flies;
@@ -838,7 +843,7 @@ if handles.needssaving
       savebutton_Callback(handles.savebutton, eventdata, handles);
    end
 end
-uiresume(handles.figure1);
+%uiresume(handles.figure1);
 
 
 % --- Executes on button press in undobutton.
@@ -1157,7 +1162,7 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-uiresume(handles.figure1);
+%uiresume(handles.figure1);
 
 % Hint: delete(hObject) closes the figure
 %delete(hObject);

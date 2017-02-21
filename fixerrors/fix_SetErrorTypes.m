@@ -5,7 +5,7 @@ function SetErrorTypes(handles)
 isbirth = false; isdeath = false;
 isswap = false; isjump = false;
 isorientchange = false; isorientvelmismatch = false;
-islargemajor = false;
+islargemajor = false; istouch = false;
 for i = 1:length(handles.seqs),
   if ~isempty( strfindi(handles.seqs(i).type,'dummy') ),
     continue;
@@ -21,6 +21,9 @@ if isdeath
 end
 if isswap,
   s{end+1} = 'Match Cost Ambiguity';
+end
+if istouch
+  s{end+1} = 'Is Touching';
 end
 if isjump,
   s{end+1} = 'Large Jump';

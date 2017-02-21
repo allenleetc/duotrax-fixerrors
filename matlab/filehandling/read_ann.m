@@ -49,6 +49,7 @@ if strcmp(filenameS,'roidata.mat')
   s.background_mean = [];
   s.bg_type = 'dark_on_light';
   s.n_bg_std_thresh_low = nan;
+  s.istouching = td.istouching;
   
   varargout = cell(size(varargin));
   for i=1:nargout

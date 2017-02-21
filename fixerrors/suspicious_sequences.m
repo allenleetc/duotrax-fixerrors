@@ -17,9 +17,9 @@ nflies = length(dataperfly);
 nframes = max(getstructarrayfield(dataperfly,'endframe'));
 
 %% read parameters
-[center_dampen,angle_dampen,max_jump,maxmajor,meanmajor,vel_angle_wt] = ...
+[center_dampen,angle_dampen,max_jump,maxmajor,meanmajor,vel_angle_wt,istouching] = ...
   read_ann(annname,'center_dampen','angle_dampen','max_jump','maxmajor','meanmajor',...
-  'velocity_angle_weight');
+  'velocity_angle_weight','istouching');
 MINERRJUMP = MINERRJUMPFRAC*max_jump;
 LARGEMAJOR = meanmajor + MAXMAJORFRAC * (maxmajor-meanmajor);
 MAXDISTCLOSE = 4*maxmajor*MAXDISTCLOSEFRAC;
@@ -231,6 +231,15 @@ for i = 1:cols(swappairs),
     idx = starts(j):ends(j)-1;
     addsequence([fly1,fly2],'swap',idx,swappairscurr(idx));
   end
+end
+
+%% find istouching
+assert(isvector(istouching) && numel(istouching)==nframes);
+istouching = imclose(istouching,se);
+[starts,ends] = get_interval_ends(istouching);
+for j = 1:length(starts)
+  idx = starts(j):ends(j)-1;
+  addsequence([1 2],'touch',idx,ones(size(idx)));
 end
 
 %% find frames, flies in which the major axis length is large
