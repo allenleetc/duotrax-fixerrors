@@ -18,7 +18,7 @@ LARGEMAJOR = meanmajor + MAXMAJORFRAC * (maxmajor-meanmajor);
 
 %% make sure flies haven't been deleted
 for s = 1:nseqs,
-   if ~isempty( strfindi( seqs(s).type, 'dummy' ) ), continue; end
+  if ~isempty( strfindi( seqs(s).type, 'dummy' ) ), continue; end
   isdeleted = false;
   for fly = seqs(s).flies,
     if any(isnan(dataperfly(fly).x))

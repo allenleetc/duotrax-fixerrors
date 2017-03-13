@@ -22,7 +22,7 @@ end
 %% choose movie
 
 fprintf('Choose a movie to fix errors in\n');
-movieexts = {'*.fmf','*.sbfmf','*.ufmf','*.avi'}';
+movieexts = {'*.avi','*.fmf','*.sbfmf','*.ufmf'}';
 helpmsg = 'Choose movie file for which to fix tracking errors';
 [moviename,moviepath] = uigetfilehelp(movieexts,'Choose movie file',moviename,'helpmsg',helpmsg);
 if isnumeric(moviename) && moviename == 0, 
@@ -48,10 +48,10 @@ if RUN_UNTRACKED
 else
    annname = [matpath,moviename,'.ann'];
    helpmsg = {};
-   helpmsg{1} = 'Choose the Ctrax annotation file corresponding to:';
+   helpmsg{1} = 'Choose the ROI data file corresponding to:';
    helpmsg{2} = sprintf('Movie: %s',[moviepath,moviename]);
    helpmsg{3} = sprintf('Trajectory mat file: %s',[matpath,matname]);
-   [annname,annpath] = uigetfilehelp({'*.ann'},'Choose ann file',annname,'helpmsg',helpmsg);
+   [annname,annpath] = uigetfilehelp({'*.mat'},'Choose roidata file',annname,'helpmsg',helpmsg);
    if isnumeric(annname) && annname == 0,
       return;
    end
@@ -299,7 +299,7 @@ end
 trx = fixerrorsgui(seqs,moviename,trx0,annname,params,matname,loadname,readframe_fcn, circular_arena);
 
 %% save
-forcesave = 1;
+forcesave = 0;
 [status, cmdout] = system( 'hostname' );
 if strcmp( deblank( cmdout ), 'ctrdev-trusty' )
    forcesave = 0;

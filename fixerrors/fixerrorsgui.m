@@ -134,7 +134,7 @@ handles.selected = [];
 handles.motionobj = [];
 handles.plotpath = 'All Flies';
 handles.nframesplot = 101;
-handles.zoommode = 'sequence';
+handles.zoommode = 'Whole Arena';
 handles.undolist = {};
 handles.needssaving = 0;
 
@@ -627,8 +627,8 @@ end
 
 try
   contents = get(handles.nexterrortypemenu,'string');
-  if length(contents) == 1,
-    s = contents;
+  if length(contents) == 1 
+    s = contents; % AL cell instead of char see L638
   else
     v = get(handles.nexterrortypemenu,'value');
     if v > length(contents),
@@ -721,10 +721,10 @@ for ai = length( handles.undolist ):-1:1
          if length( handles.undolist ) == 1
             handles.undolist = {};
          else
-            handles.undolist = handles.undolist{2:end};
+            handles.undolist = handles.undolist{2:end}; % XXXAL
          end
       elseif ai == length( handles.undolist )
-         handles.undolist = handles.undolist{1:end-1};
+         handles.undolist = handles.undolist{1:end-1}; % XXXAL
       else
          try % untested
             handles.undolist = handles.undolist{[1:ai-1 ai+1:length( handles.undolist )]};
@@ -802,6 +802,8 @@ function savebutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% AL: This is "save temporary progress"
+
 global defaultpath;
 
 if ~isfield(handles,'savename') || isempty(handles.savename),
@@ -837,12 +839,54 @@ function quitbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-if handles.needssaving
-   v = questdlg('Save progress before quitting?','Save?','Yes','No','Yes');
-   if strcmpi(v,'yes'),
-      savebutton_Callback(handles.savebutton, eventdata, handles);
-   end
+% AL: This is "Export and Quit". To just Quit, kill the window.
+
+[path,trxfname] = filenamesplit(handles.matname);
+trxfname = splitext(trxfname);
+nowstr = datestr(now,'yyyymmddTHHMMSS');
+trxfname = sprintf('%s_fixed_%s.mat',trxfname,nowstr);
+trxfname = fullfile(path,trxfname);
+diagfname = fullfile(path,sprintf('fixerrors_%s.mat',nowstr));
+
+trx = load(handles.matname);
+trx = trx.trx;
+
+assert(numel(trx)==2);
+
+FLDSMATCH = {'firstframe' 'endframe' 'nframes' 'off' 'roi' 'arena' ...
+'moviefile' 'pxpermm' 'fps' 'moviename' 'matname'};
+FLDSSWAP = {'x' 'y' 'a' 'b' 'theta' 'wing_anglel' 'wing_angler' 'dt' ...
+  'timestamps' 'wingtype' 'xwingl' 'ywingl' 'xwingr' 'ywingr' 'x_mm' ...
+  'y_mm' 'theta_mm' 'a_mm' 'b_mm'};
+cellfun(@(f)assert(isequal(trx(1).(f),trx(2).(f))),FLDSMATCH);  
+
+nswap = numel(handles.swapevents);
+for fld=FLDSSWAP,fld=fld{1}; %#ok<FXSET>
+  assert(isequal(size(trx(1).(fld)),size(trx(2).(fld)))); 
+  for i=1:nswap
+    swapfrm = handles.swapevents(i);
+    swapfrm = swapfrm:numel(trx(1).(fld));
+    tmp = trx(1).(fld)(swapfrm);
+    trx(1).(fld)(swapfrm) = trx(2).(fld)(swapfrm);
+    trx(2).(fld)(swapfrm) = tmp;
+  end  
 end
+assert(isequal(trx(1).x,handles.trx(1).x));
+assert(isequal(trx(2).b,handles.trx(2).b));
+
+fprintf(1,'%d swap events.\n',nswap);
+fprintf(1,'Saving fixed trxfile: %s.\n',trxfname);
+fprintf(1,'Saving diagfile: %s.\n',diagfname);
+save(trxfname,'trx');
+swapevents = handles.swapevents; %#ok<NASGU>
+save(diagfname,'swapevents');
+
+% if handles.needssaving
+%    v = questdlg('Save progress before quitting?','Save?','Yes','No','Yes');
+%    if strcmpi(v,'yes'),
+%       savebutton_Callback(handles.savebutton, eventdata, handles);
+%    end
+% end
 %uiresume(handles.figure1);
 
 
@@ -1109,14 +1153,14 @@ function renamedoitbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-if length(handles.selected) ~= 2,
-    errordlg('You must first select the two flies two swap. See Swap Identities Instructions Panel',...
-    'Bad Selection');
-  return;
-end
+% if length(handles.selected) ~= 2,
+%     errordlg('You must first select the two flies two swap. See Swap Identities Instructions Panel',...
+%     'Bad Selection');
+%   return;
+% end
 
-fly1 = handles.selected(1);
-fly2 = handles.selected(2);
+fly1 = 1; %handles.selected(1);
+fly2 = 2; %handles.selected(2);
 f = handles.f;
 
 if ~isalive(handles.trx(fly1),f) || ~isalive(handles.trx(fly2),f),
@@ -1124,6 +1168,11 @@ if ~isalive(handles.trx(fly1),f) || ~isalive(handles.trx(fly2),f),
     'Bad Selection');
   return;
 end
+
+if ~isfield(handles,'swapevents')
+  handles.swapevents = zeros(1,0);
+end
+handles.swapevents(1,end+1) = f;
 
 handles = fix_SwapIdentities( handles, f, fly1, fly2 );
 handles.undolist{end+1} = {'swap',f,[fly1,fly2]};
@@ -1162,8 +1211,7 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-%uiresume(handles.figure1);
-
+closereq
 % Hint: delete(hObject) closes the figure
 %delete(hObject);
 
