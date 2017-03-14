@@ -25,7 +25,7 @@ At this stage, the main UI should appear.
 
 There are two main workflows supported to find and correct swapped fly identities in the tracking.
 
-*Workflow 1: Browsing Suspicious Sequences, Fixerrors-style*
+**Workflow 1: Browsing Suspicious Sequences, Fixerrors-style**
 
 This workflow uses the Sequence Navigation and Navigation Tools panes and is taken from the original fixerrors. All "bouts" of frames where the two flies are touching are compiled into a list of Suspicious Sequences. The UI opens with the first Sequence on display. You can play this sequence using the "Play Seq" or "Play Seq Slow" buttons; or, you can navigate to the start, middle, and end of the sequence using the purple buttons.
 
@@ -33,7 +33,7 @@ If it appears that the fly identities are swapped during the sequence, this can 
 
 After the sequence is correct, you can press the "Correct" button to navigate to the next Suspicious Sequence. At any time, you can use Save Progress to temporarily save your work. Or, when you are completely done, you can use "Export Trx and Quit" to save the new/corrected trx file.
 
-*Workflow 2: Play Movie and Correct*
+**Workflow 2: Play Movie and Correct**
 
 A second workflow simply lets you play through the movie, correcting issues as you see fit. You can navigate the movie using the scrollbar or by using the play buttons. The ">>" or "Fast Play" buttons will attempt to play quickly during uninteresting frames and slow down during more interesting frames. (At the moment the difference isn't that big, and the Stop buttons can be a little "sticky".) 
 
