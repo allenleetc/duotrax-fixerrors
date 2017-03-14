@@ -1,6 +1,6 @@
 # DuoTrax FixErrors #
 
-DuoTrax/Fixerrors is derivative of Fixerrors from Ctrax. It is specialized for two-fly tracking.
+DuoTrax/Fixerrors is based on Ctrax/Fixerrors. It is specialized for two-fly tracking.
 
 ### Requirements ###
 
