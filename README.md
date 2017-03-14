@@ -1,6 +1,6 @@
 # DuoTrax FixErrors #
 
-DuoTrax/Fixerrors is based on Ctrax/Fixerrors. It is specialized for two-fly tracking.
+DuoTrax/Fixerrors is based on Ctrax/Fixerrors. It is specialized for two-fly tracking. At the moment this is just a prototype.
 
 ### Requirements ###
 
@@ -23,7 +23,7 @@ At this stage, the main UI should appear.
 
 ### Usage/Workflows ###
 
-There are two main workflows supported to find and correct swapped fly identities in the tracking.
+This prototype supports two main workflows to find and correct swapped fly identities in the tracking.
 
 **Workflow 1: Browsing Suspicious Sequences, Fixerrors-style**
 
