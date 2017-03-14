@@ -27,14 +27,19 @@ This prototype supports two main workflows to find and correct swapped fly ident
 
 **Workflow 1: Browsing Suspicious Sequences, Fixerrors-style**
 
-This workflow uses the Sequence Navigation and Navigation Tools panes and is taken from the original fixerrors. All "bouts" of frames where the two flies are touching are compiled into a list of Suspicious Sequences. The UI opens with the first Sequence on display. You can play this sequence using the "Play Seq" or "Play Seq Slow" buttons; or, you can navigate to the start, middle, and end of the sequence using the purple buttons.
+This workflow uses the Sequence Navigation and Navigation Tools panes and is similar to the original fixerrors. All "bouts" of frames where the two flies are touching are compiled into a list of Suspicious Sequences. The UI opens with the first Sequence on display. You can play this sequence using the "Play Seq" or "Play Seq Slow" buttons; the purple buttons provide shortcuts to navigate to the start, middle, and end of the sequence.
 
 If it appears that the fly identities are swapped during the sequence, this can be fixed using the "Edit Tools". (At the moment, only "Swap Identities" is supported.) Hit "Go" and then follow the directions to swap the fly identities **from the selected frame until the end of the movie.**
 
-After the sequence is correct, you can press the "Correct" button to navigate to the next Suspicious Sequence. At any time, you can use Save Progress to temporarily save your work. Or, when you are completely done, you can use "Export Trx and Quit" to save the new/corrected trx file.
+After the sequence is correct, you can press the "Correct" button to navigate to the next Suspicious Sequence. At any time, you can use "Save Progress" to temporarily save your work. Or, when you are completely done, you can use "Export Trx and Quit" to save the new/corrected trx file.
 
 **Workflow 2: Play Movie and Correct**
 
-A second workflow simply lets you play through the movie, correcting issues as you see fit. You can navigate the movie using the scrollbar or by using the play buttons. The ">>" or "Fast Play" buttons will attempt to play quickly during uninteresting frames and slow down during more interesting frames. (At the moment the difference isn't that big, and the Stop buttons can be a little "sticky".) 
+A second workflow simply lets you play through the movie, correcting issues as you see fit. You can navigate the movie using the scrollbar or by using the play buttons. The ">>" or "Fast Play" buttons will attempt to play quickly during uninteresting frames and slow down during more interesting frames. (At the moment the difference isn't that big. Also, the Stop buttons can sometimes be a little "sticky" for some reason.)
 
 While browsing the movie, if there is an issue, again, you can use the Edit Tools to swap the fly identities.
+
+### Notes ###
+After making all corrections, I would recommend playing the entire movie start to finish. When making corrections using Suspicious Sequences, it is possible that the flies get exchanged when they are relatively far apart. 
+
+This is a prototype and there are some rough edges and clunky behavior. We can iterate and streamline to make this as effective as possible.
