@@ -8,26 +8,26 @@ end
 
 ii = handles.trx(fly).off+(handles.f);
 
-if strcmpi(handles.plotpath,'all flies') || ...
-      (strcmpi(handles.plotpath,'seq flies') && ismember(fly, handles.seq.flies))
+% if strcmpi(handles.plotpath,'all flies') || ...
+%       (strcmpi(handles.plotpath,'seq flies') && ismember(fly, handles.seq.flies))
+%    if isalive(handles.trx(fly), handles.f)
+%       fix_SetFlyVisible(handles,fly,'on');
+%       i = ii;
+%    elseif handles.show_dead
+%       fix_SetFlyVisible(handles,fly,'on');
+%       i = 1;
+%    else
+%       fix_SetFlyVisible(handles,fly,'off');
+%       i = 1;
+%    end
+% else
+   fix_SetFlyVisible(handles,fly,'on');
    if isalive(handles.trx(fly), handles.f)
-      fix_SetFlyVisible(handles,fly,'on');
       i = ii;
-   elseif handles.show_dead
-      fix_SetFlyVisible(handles,fly,'on');
-      i = 1;
    else
-      fix_SetFlyVisible(handles,fly,'off');
       i = 1;
    end
-else
-   fix_SetFlyVisible(handles,fly,'off');
-   if isalive(handles.trx(fly), handles.f)
-      i = ii;
-   else
-      i = 1;
-   end
-end
+% end
 
 x = handles.trx(fly).x(i);
 y = handles.trx(fly).y(i);

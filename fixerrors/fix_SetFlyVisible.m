@@ -13,4 +13,4 @@ set(handles.hright(fly),'visible',v);
 set(handles.hhead(fly),'visible',v);
 set(handles.htail(fly),'visible',v);
 set(handles.htailmarker(fly),'visible',v);
-set(handles.hpath(fly),'visible',v);
+set(handles.hpath(fly),'visible','off');

@@ -12,9 +12,10 @@ function handles = UpdateFlyPathVisible(handles)
 % 5. scroll frame
 % see flies change visiblity on scroll, because visibility logic is inconsistent here
 
-hObject = handles.plotpathmenu;
-contents = get(hObject,'String');
-s = contents{get(hObject,'Value')};
+% hObject = handles.plotpathmenu;
+% contents = get(hObject,'String');
+% s = contents{get(hObject,'Value')};
+s = 'none';
 handles.plotpath = s;
 
 for fly = 1:handles.nflies,

@@ -137,6 +137,8 @@ handles.nframesplot = 101;
 handles.zoommode = 'Whole Arena';
 handles.undolist = {};
 handles.needssaving = 0;
+handles.MaxFPS = 40;
+handles.MinSPF = 1/handles.MaxFPS;
 
 handles.bgthresh = 10;
 %handles.lighterthanbg = 1;
@@ -169,20 +171,25 @@ end
 
 InitializeFrameSlider(handles);
 fix_SetFrameNumber(handles);
+handles = fix_StorePanelPositions(handles);
+
+guidata(hObject,handles);
+
 handles = PlotFirstFrame(handles);
-InitializeDisplayPanel(handles);
+%InitializeDisplayPanel(handles);
 fix_SetErrorTypes(handles);
 if ~isempty(handles.bgmed)
    handles.bgmed = reshape(handles.bgmed,[handles.nc,handles.nr])';
 end
 InitializeKeyPressFcns(handles);
 
-handles = fix_StorePanelPositions(handles);
+set(handles.editmenu,'Value',2); % swap
+
 
 % Update handles structure
 guidata(hObject, handles);
 
-fix_Play(handles,handles.figure1);
+fix_Play(handles,handles.playstopbutton);
 
 % UIWAIT makes fixerrorsgui wait for user response (see UIRESUME)
 %AL
@@ -200,13 +207,13 @@ function handles = InitializeMainAxes(handles)
 handles.mainaxesaspectratio = 1;
 
 
-function InitializeDisplayPanel(handles)
+%function InitializeDisplayPanel(handles)
 
-i = find(strcmpi(get(handles.plotpathmenu,'string'),handles.plotpath),1);
-set(handles.plotpathmenu,'value',i);
-i = find(strcmpi(get(handles.zoommenu,'string'),handles.zoommode),1);
-set(handles.zoommenu,'value',i);
-set(handles.nframesplotedit,'string',num2str(handles.nframesplot));
+%i = find(strcmpi(get(handles.plotpathmenu,'string'),handles.plotpath),1);
+%set(handles.plotpathmenu,'value',i);
+%i = find(strcmpi(get(handles.zoommenu,'string'),handles.zoommode),1);
+%set(handles.zoommenu,'value',i);
+%set(handles.nframesplotedit,'string',num2str(handles.nframesplot));
 
 function InitializeFrameSlider(handles)
 
@@ -518,29 +525,24 @@ function frameslider_CreateFcn(hObject, eventdata, handles)
 % Hint: slider controls usually have a light gray background.
 fix_SetCreatedObjectBgColor( hObject, [.9 .9 .9] );
 
-
-function frameedit_Callback(hObject, eventdata, handles)
-% hObject    handle to frameedit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of frameedit as text
-%        str2double(get(hObject,'String')) returns contents of frameedit as a double
-f = str2double(get(hObject,'String'));
-if isnan(f),
-  set(hObject,'string',num2str(handles.f));
-  return;
-end
+function lclSetFrame(handles,f) % updates handles
 handles.f = round(f);
 handles.f = max(f,1);
 handles.f = min(f,handles.nframes);
-if handles.f ~= f,
-  set(hObject,'string',num2str(handles.f));
-end
-fix_SetFrameNumber(handles,handles.f);
+% if handles.f~=f
+%   set(hObject,'string',num2str(handles.f));
+% end
+fix_SetFrameNumber(handles);
 fix_PlotFrame(handles);
-guidata(hObject,handles);
+guidata(handles.figure1,handles);
 
+function frameedit_Callback(hObject, eventdata, handles)
+f = str2double(get(hObject,'String'));
+if isnan(f)
+  set(hObject,'string',num2str(handles.f));
+else
+  lclSetFrame(handles,f);
+end
 
 % --- Executes during object creation, after setting all properties.
 function frameedit_CreateFcn(hObject, eventdata, handles)
@@ -699,7 +701,7 @@ end
 
 guidata(hObject,handles);
 
-fix_Play(handles,hObject);
+fix_Play(handles,handles.playstopbutton);
 
 
 % --- Executes on button press in backbutton.
@@ -1981,19 +1983,21 @@ set(handles.hconnect,'color',color*.75,'linewidth',3,'linestyle','--',...
 guidata(hObject,handles);
 
 
-% --- Executes on button press in playstopbutton.
 function playstopbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to playstopbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-if strcmpi(get(hObject,'string'),'play'),
+if strcmpi(get(hObject,'string'),'play seq')
   fix_Play(handles,hObject);
 else
   handles.isplaying = false;
   guidata(hObject,handles);
 end
 
+function playstopbuttonslow_Callback(hObject, eventdata, handles)
+if strcmpi(get(hObject,'string'),'play seq slow')
+  fix_Play(handles,hObject,0.5);
+else
+  handles.isplaying = false;
+  guidata(hObject,handles);
+end
 
 % --- Executes on button press in extenddoitbutton.
 function extenddoitbutton_Callback(hObject, eventdata, handles)
@@ -2678,21 +2682,15 @@ set( handles.superposedoitbutton, 'visible', 'off' );
 fix_ActionCancelled( hObject, handles, handles.superposetrackspanel );
 
 
-% --- Executes when figure1 is resized.
 function figure1_ResizeFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 figpos = get(handles.figure1,'Position');
-
-% right panels: keep width, bottom dist, height, right dist the same
 if isfield( handles, 'rightpanel_tags' )
    ntags = numel(handles.rightpanel_tags);
 else
    ntags = 0;
 end
-for fni = 1:ntags,
+for fni = 1:ntags
   fn = handles.rightpanel_tags{fni};
   h = handles.(fn);
   pos = get(h,'Position');
@@ -2700,33 +2698,38 @@ for fni = 1:ntags,
   set(h,'Position',pos);
 end
 
-% stuff below axes: keep dist bottom, height same, scale dleft, width
+axpos = get(handles.mainaxes,'Position');
+axpos(4) = figpos(4)-axpos(2);
+axpos(3) = figpos(3)-max(handles.rightpanel_dright)-10;
+set(handles.mainaxes,'Position',axpos);
+% sliderpos = get(handles.frameslider,'Position');
+% rightpanelpos = get(handles.seqinfopanel,'Position');
+% pos = get(handles.mainaxes,'Position');
+% if isfield( handles, 'axes_dslider' )
+%    pos(2) = sliderpos(2)+sliderpos(4)+handles.axes_dslider;
+%    pos(4) = figpos(4)-pos(2)-handles.axes_dtop;
+%    pos(3) = rightpanelpos(1)-pos(1)-handles.axes_drightpanels;
+% end
+% set(handles.mainaxes,'Position',pos);
+% sliderpos([1,3]) = pos([1,3]);
+% set(handles.frameslider,'Position',sliderpos);
+
+% stuff below axes: match with of axes
 if isfield( handles, 'bottom_tags' )
    ntags = numel(handles.bottom_tags);
 else
    ntags = 0;
 end
-for fni = 1:ntags,
+for fni = 1:ntags
   fn = handles.bottom_tags{fni};
   h = handles.(fn);
   pos = get(h,'Position');
-  pos(1) = figpos(3)*handles.bottom_dleft_norm(fni);
-  pos(3) = figpos(3)*handles.bottom_width_norm(fni);
+  %pos(1) = figpos(3)*handles.bottom_dleft_norm(fni);
+  %pos(3) = figpos(3) - handles.rightpanel_dright(fni)-pos(1);
+  pos(3) = axpos(3);
   set(h,'Position',pos); 
 end
 
-% axes should fill everything else
-sliderpos = get(handles.frameslider,'Position');
-rightpanelpos = get(handles.seqinfopanel,'Position');
-pos = get(handles.mainaxes,'Position');
-if isfield( handles, 'axes_dslider' )
-   pos(2) = sliderpos(2)+sliderpos(4)+handles.axes_dslider;
-   pos(4) = figpos(4)-pos(2)-handles.axes_dtop;
-   pos(3) = rightpanelpos(1)-pos(1)-handles.axes_drightpanels;
-end
-set(handles.mainaxes,'Position',pos);
-sliderpos([1,3]) = pos([1,3]);
-set(handles.frameslider,'Position',sliderpos);
 
 
 % --- Executes on key press with focus on figure1 and none of its controls.
@@ -2779,3 +2782,26 @@ function showdead_checkbox_Callback(hObject, eventdata, handles)
 handles.show_dead = get( hObject, 'value' );
 fix_PlotFrame( handles )
 guidata( hObject, handles )
+
+
+function pbSeqStart_Callback(hObject, eventdata, handles)
+SEQDF = 20;
+f0 = max(1,handles.seq.frames(1)-SEQDF);
+lclSetFrame(handles,f0);
+function pbSeqCtr_Callback(hObject, eventdata, handles)
+f = handles.seq.frames(1);
+lclSetFrame(handles,f);
+function pbSeqEnd_Callback(hObject, eventdata, handles)
+SEQDF = 20;
+f1 = min(handles.nframes,handles.seq.frames(end)+SEQDF);
+lclSetFrame(handles,f1);
+
+function pbPlay_Callback(hObject, eventdata, handles)
+if strcmpi(get(hObject,'string'),'>')
+  fix_Play(handles,hObject);
+else
+  handles.isplaying = false;
+  guidata(hObject,handles);
+  drawnow();
+  set(hObject,'string','>','backgroundcolor',[0,.5,0]);
+end
