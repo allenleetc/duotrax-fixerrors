@@ -4,7 +4,7 @@ DuoTrax/Fixerrors is based on Ctrax/Fixerrors. It is specialized for two-fly tra
 
 ### Requirements ###
 
-So far tested/developed only Windows7+R2016b; Matlab R2014b or later preferred.
+So far tested/developed only Windows7+R2016b. Use of Matlab R2014b or later is probably best.
 
 ### Install ###
 
