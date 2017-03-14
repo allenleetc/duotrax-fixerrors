@@ -131,13 +131,15 @@ else
 
 %% convert to px, seconds
 
-[matpathtmp,matnametmp] = split_path_and_filename(matname);
-[convertsucceeded,convertmatname,trx] = convert_units_f('matname',matnametmp,...
-   'matpath',matpathtmp,'moviename',moviename,'readframe_fcn',readframe_fcn);
-if ~convertsucceeded,
-  return;
-end
-convertmatname = matname;
+trx = load(matname);
+trx = trx.trx;
+% [matpathtmp,matnametmp] = split_path_and_filename(matname);
+% [convertsucceeded,convertmatname,trx] = convert_units_f('matname',matnametmp,...
+%    'matpath',matpathtmp,'moviename',moviename,'readframe_fcn',readframe_fcn);
+% if ~convertsucceeded,
+%   return;
+% end
+% convertmatname = matname;
 %[trx,matname,succeeded] = load_tracks(convertmatname,moviename);
 
 %% set parameters for detecting suspicious frames
@@ -179,7 +181,7 @@ if ~DORESTART,
       largemajor = meanmajor + 2/3*(maxmajor-meanmajor);
    end
    if ~exist('minanglediff','var'),
-      minanglediff = 90;
+      minanglediff = nan;
    end
    if ~exist('minwalkvel','var'),
       minwalkvel = 1 / 4;
