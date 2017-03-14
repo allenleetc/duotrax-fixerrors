@@ -13,6 +13,7 @@ Just git clone or download the repo. In Matlab, navigate to <DuoTraxFixErrors>/f
 ### Startup ###
 
 On startup, you will be asked to specify the following files/information:
+
 * Specify the (tracked) movie that is to be examined/fixed.
 * Specify the (Duotrax-generated) trxfile, eg 'registered_trx.mat', for the movie.
 * Specify the (Duotrax-generated) 'roidata.mat' file for the movie. This is in place of the Ctrax ".ann" file normally requested by fixerrors.
