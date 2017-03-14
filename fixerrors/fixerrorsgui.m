@@ -104,6 +104,11 @@ if isfield(handles.trx,'timestamps'),
   end
 end
 
+handles.frmIsSeq = false(1,handles.nframes);
+frmsSeq = cat(2,handles.seqs.frames);
+handles.frmIsSeq(frmsSeq) = true;
+fprintf('%d seqframes in %d sequences...\n',nnz(handles.frmIsSeq),numel(handles.seqs));
+
 % initialize parameters
 handles = InitializeMainAxes(handles);
 
@@ -1995,7 +2000,7 @@ end
 
 function playstopbuttonslow_Callback(hObject, eventdata, handles)
 if strcmpi(get(hObject,'string'),'play seq slow')
-  fix_Play(handles,hObject,0.5);
+  fix_Play(handles,hObject,'speedfacseq',0.5);
 else
   handles.isplaying = false;
   guidata(hObject,handles);
@@ -2795,14 +2800,28 @@ lclSetFrame(handles,f1);
 
 function pbPlay_Callback(hObject, eventdata, handles)
 if strcmpi(get(hObject,'string'),'>')
-  fix_Play(handles,hObject,0.5);
+  fix_Play(handles,hObject,'speedfac',0.5,'speedfacseq',0.5);
 else
   handles.isplaying = false;
   guidata(hObject,handles);
 end
 function pbPlayFast_Callback(hObject, eventdata, handles)
 if strcmpi(get(hObject,'string'),'>>')
-  fix_Play(handles,hObject);
+  fix_Play(handles,hObject,'speedfac',inf,'speedfacseq',0.5);
+else
+  handles.isplaying = false;
+  guidata(hObject,handles);
+end
+function pbBack_Callback(hObject, eventdata, handles)
+if strcmpi(get(hObject,'string'),'<')
+  fix_Play(handles,hObject,'speedfac',0.5,'speedfacseq',0.5,'playdir',-1);
+else
+  handles.isplaying = false;
+  guidata(hObject,handles);
+end
+function pbBackFast_Callback(hObject, eventdata, handles)
+if strcmpi(get(hObject,'string'),'<<')
+  fix_Play(handles,hObject,'speedfac',inf,'speedfacseq',0.5,'playdir',-1);
 else
   handles.isplaying = false;
   guidata(hObject,handles);

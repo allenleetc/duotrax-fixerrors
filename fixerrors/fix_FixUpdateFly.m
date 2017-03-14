@@ -60,5 +60,5 @@ set(handles.hpath(fly),'xdata',handles.trx(fly).x(i0:i1),...
   'ydata',handles.trx(fly).y(i0:i1));
 
 handles.needssaving = 1;
-guidata( handles.figure1, handles )
+%guidata( handles.figure1, handles )
 

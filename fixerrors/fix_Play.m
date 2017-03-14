@@ -1,10 +1,13 @@
-function fix_Play(handles,hObject,speedfac)
+function fix_Play(handles,hObject,varargin)
 % play through a sequence
 % splintered from fixerrorsgui 6/23/12 JAB
 
-if exist('speedfac','var')==0
-  speedfac = 1.0;
-end
+[playdir,speedfac,speedfacseq] = myparse(varargin,...
+  'playdir',1,...
+  'speedfac',1.0,...
+  'speedfacseq',1.0);
+
+maxnonseq = isinf(speedfac);
 
 handles.isplaying = true;
 origstr = get(hObject,'string');
@@ -15,14 +18,21 @@ switch get(hObject,'tag')
   case {'playstopbutton' 'playstopbuttonslow'}
     f0 = max(1,handles.seq.frames(1)-10);
     f1 = min(handles.nframes,handles.seq.frames(end)+10);
+    switch playdir 
+      case 1, frmsPlay=f0:f1;
+      case -1, frmsPlay=f1:-1:f0;
+    end
   otherwise
-    f0 = handles.f;
-    f1 = handles.nframes;
+    switch playdir
+      case 1, frmsPlay = handles.f:handles.nframes;
+      case -1, frmsPlay = handles.f:-1:1;
+    end
 end     
 
-minSPFuse = handles.MinSPF/speedfac;
+minSPF = handles.MinSPF/speedfac;
+minSPFseq = handles.MinSPF/speedfacseq;
 tic;
-for f = f0:f1  
+for f = frmsPlay
   handles = guidata(hObject);
   if ~handles.isplaying
     break;
@@ -34,13 +44,18 @@ for f = f0:f1
   drawnow;
   handles = guidata(hObject);
 
-  if handles.MaxFPS > 0
-    tmp = toc;
-    if tmp < minSPFuse
-      pause(minSPFuse - tmp);
+  if handles.frmIsSeq(f)
+    dtFrm = toc;
+    if dtFrm < minSPFseq
+      pause(minSPFseq - dtFrm);
     end
   else
-    drawnow;
+    if ~maxnonseq
+      dtFrm = toc;
+      if dtFrm < minSPF
+        pause(minSPF - dtFrm);
+      end
+    end
   end
   tic;
 end
