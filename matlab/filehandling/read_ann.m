@@ -26,7 +26,7 @@ if strcmp(filenameS,'roidata.mat')
   roifname = fullfile(p,[f e]);
   tdfname = fullfile(p,'trackingdata.mat');
   bgfname = fullfile(p,'bgdata.mat');
-  fprintf(1,'Fake read_ann from %s/%s/%s.\n',roifname,tdfname,bgfname);  
+  %fprintf(1,'Fake read_ann from %s/%s/%s.\n',roifname,tdfname,bgfname);  
   roi = load(roifname);
   td = load(tdfname);
   bg = load(bgfname);

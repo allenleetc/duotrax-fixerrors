@@ -34,9 +34,9 @@ if RUN_UNTRACKED
    matpath = moviepath;
    matname = [strrep(moviename,movieext,'.mat')];
 else
-   helpmsg = sprintf('Choose the mat file containing the trajectories corresponding to movie %s.',[moviepath,moviename]);
+   helpmsg = sprintf('Choose the trx file containing the trajectories corresponding to movie %s.',[moviepath,moviename]);
    matname = [moviepath,strrep(moviename,movieext,'.mat')];
-   [matname,matpath] = uigetfilehelp({'*.mat'},'Choose mat file',matname,'helpmsg',helpmsg);
+   [matname,matpath] = uigetfilehelp({'*.mat'},'Choose trx file',matname,'helpmsg',helpmsg);
    if isnumeric(matname) && matname == 0,
       return;
    end
