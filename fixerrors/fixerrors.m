@@ -49,13 +49,17 @@ else
    annname = [matpath,moviename,'.ann'];
    helpmsg = {};
    helpmsg{1} = 'Choose the ROI data file corresponding to:';
-   helpmsg{2} = sprintf('Movie: %s',[moviepath,moviename]);
+   helpmsg{2} = sprintf('Movie: %s; and',[moviepath,moviename]);
    helpmsg{3} = sprintf('Trajectory mat file: %s',[matpath,matname]);
    [annname,annpath] = uigetfilehelp({'*.mat'},'Choose roidata file',annname,'helpmsg',helpmsg);
    if isnumeric(annname) && annname == 0,
       return;
    end
 end
+
+
+tmpfilename = fullfile(matpath,sprintf('fixerrorsTmpProg_%s_%s.mat',splitext(moviename),...
+  splitext(matname)));
 
 moviename = [moviepath,moviename];
 matname = [matpath,matname];
@@ -80,19 +84,18 @@ end
 %% see if we should restart
 
 tag = movietag;
-loadname = sprintf('tmpfixed_%s.mat',tag);
 DORESTART = false;
   
-if exist(loadname,'file'),
-  tmp = dir(loadname);
-  which(loadname)
-  tmp2 = load(loadname,'matname','moviename');
-  if isfield(tmp2,'moviename'),
+if exist(tmpfilename,'file')
+  tmp = dir(tmpfilename);
+  %which(tmpfilename)
+  tmp2 = load(tmpfilename,'matname','moviename');
+  if isfield(tmp2,'moviename')
     oldmoviename = tmp2.moviename;
   else
     oldmoviename = 'unknown movie';
   end
-  if isfield(tmp2,'matname'),
+  if isfield(tmp2,'matname')
     oldmatname = tmp2.matname;
   else
     oldmatname = 'unknown trx file';
@@ -105,9 +108,9 @@ if exist(loadname,'file'),
   prompt{5} = 'Would you like to load the saved results and restart? ';
 
   button = questdlg(cell2mat(prompt),'Restart?');
-  if strcmpi(button,'yes'),
+  if strcmpi(button,'yes')
     DORESTART = true;
-  elseif strcmpi(button,'cancel'),
+  elseif strcmpi(button,'cancel')
     return
   end
   
@@ -123,7 +126,7 @@ if RUN_UNTRACKED
    params = {};
    circular_arena = struct( 'do_set_circular_arena', 0 );
    trx0 = trx;
-   %trx = fixerrorsgui(seq,moviename,trx0,annname,{},matname,loadname,readframe_fcn);
+   %trx = fixerrorsgui(seq,moviename,trx0,annname,{},matname,tmpfilename,readframe_fcn);
 else
 
 %% convert to px, seconds
@@ -170,7 +173,7 @@ if ~DORESTART,
       minerrjump = .2*max_jump;
    end
    if ~exist('minorientchange','var'),
-      minorientchange = 45;
+      minorientchange = nan;
    end
    if ~exist('largemajor','var'),
       largemajor = meanmajor + 2/3*(maxmajor-meanmajor);
@@ -274,16 +277,16 @@ end % if not running untracked
 fprintf('Movie: %s\n',moviename);
 fprintf('Mat: %s\n',matname);
 fprintf('Annname: %s\n',annname);
-fprintf('Temporary file created at: %s\n',loadname);
+fprintf('Temporary progress file will be created at: %s\n',tmpfilename);
 
-if DORESTART,
+if DORESTART
   realmatname = matname;
-  load(loadname);
-  if isfield(trx,'f2i'),
+  load(tmpfilename);
+  if isfield(trx,'f2i')
     trx = rmfield(trx,'f2i');
   end
-  if ~isfield(trx,'off'),
-    for i = 1:length(trx),
+  if ~isfield(trx,'off')
+    for i = 1:length(trx)
       trx(i).off = -trx(i).firstframe + 1;
     end
   end
@@ -294,9 +297,11 @@ if DORESTART,
   if ~exist( 'circular_arena', 'var' )
      circular_arena = struct( 'do_set_circular_arena', 0 );
   end
+else
+  swapevents = zeros(1,0);
 end
 
-trx = fixerrorsgui(seqs,moviename,trx0,annname,params,matname,loadname,readframe_fcn, circular_arena);
+trx = fixerrorsgui(seqs,moviename,trx0,annname,params,matname,tmpfilename,readframe_fcn,circular_arena,swapevents);
 
 %% save
 forcesave = 0;

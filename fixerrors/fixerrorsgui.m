@@ -64,6 +64,11 @@ if length( varargin ) > 8
 else
    handles.circular_arena = struct( 'do_set_circular_arena', 0 );
 end
+if numel(varargin)>9
+  handles.swapevents = varargin{10};
+else
+  handles.swapevents = zeros(1,0);
+end
 
 % get timestamps
 if isfield(handles.trx,'timestamps'),
@@ -171,8 +176,6 @@ end
 if ~didload,
   handles.doneseqs = [];
 end
-
-handles.swapevents = zeros(1,0);
 
 % initialize gui
 
@@ -829,16 +832,17 @@ if ~isfield(handles,'savename') || isempty(handles.savename),
 end
 
 %trx = rmfield(handles.trx,'f2i');
-%trx = handles.trx;
-trx = fix_FixIgnoredFields(handles);
-
+trx = handles.trx;
+%trx = fix_FixIgnoredFields(handles);
+swapevents = handles.swapevents;
 seqs = handles.seqs;
 doneseqs = handles.doneseqs;
 moviename = handles.moviename;
 seqi = handles.seqi;
 params = handles.params;
 matname = handles.matname;
-save(handles.savename,'trx','seqs','doneseqs','moviename','seqi','params','matname');
+save(handles.savename,'trx','swapevents','seqs','doneseqs','moviename','seqi','params','matname');
+fprintf('Saved temporary progress: %s\n',handles.savename);
 
 handles.needssaving = 0;
 guidata(hObject,handles);
