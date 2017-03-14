@@ -8,7 +8,7 @@ function varargout = fixerrorsgui(varargin)
 % LOADNAME: previously saved results to restart with
 
 % Begin initialization code - DO NOT EDIT
-gui_Singleton = 1;
+gui_Singleton = 0;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
                    'gui_OpeningFcn', @fixerrorsgui_OpeningFcn, ...
@@ -168,6 +168,8 @@ if ~didload,
 end
 
 % initialize gui
+
+set(handles.txMoviename,'string',handles.moviename);
 
 InitializeFrameSlider(handles);
 fix_SetFrameNumber(handles);
@@ -2685,48 +2687,43 @@ fix_ActionCancelled( hObject, handles, handles.superposetrackspanel );
 function figure1_ResizeFcn(hObject, eventdata, handles)
 
 figpos = get(handles.figure1,'Position');
-if isfield( handles, 'rightpanel_tags' )
-   ntags = numel(handles.rightpanel_tags);
-else
-   ntags = 0;
-end
+
+ntags = numel(handles.upperrightpanel_tags);
 for fni = 1:ntags
-  fn = handles.rightpanel_tags{fni};
+  fn = handles.upperrightpanel_tags{fni};
   h = handles.(fn);
   pos = get(h,'Position');
-  pos(1) = figpos(3) - handles.rightpanel_dright(fni);
+  pos(1) = figpos(3) - handles.upperrightpanel_dright(fni);
+  pos(2) = figpos(4) - handles.upperrightpanel_dtop(fni);
+  set(h,'Position',pos);
+end
+
+ntags = numel(handles.lowerrightpanel_tags);
+for fni = 1:ntags
+  fn = handles.lowerrightpanel_tags{fni};
+  h = handles.(fn);
+  pos = get(h,'Position');
+  pos(1) = figpos(3) - handles.lowerrightpanel_dright(fni);
   set(h,'Position',pos);
 end
 
 axpos = get(handles.mainaxes,'Position');
-axpos(4) = figpos(4)-axpos(2);
-axpos(3) = figpos(3)-max(handles.rightpanel_dright)-10;
-set(handles.mainaxes,'Position',axpos);
-% sliderpos = get(handles.frameslider,'Position');
-% rightpanelpos = get(handles.seqinfopanel,'Position');
-% pos = get(handles.mainaxes,'Position');
-% if isfield( handles, 'axes_dslider' )
-%    pos(2) = sliderpos(2)+sliderpos(4)+handles.axes_dslider;
-%    pos(4) = figpos(4)-pos(2)-handles.axes_dtop;
-%    pos(3) = rightpanelpos(1)-pos(1)-handles.axes_drightpanels;
-% end
-% set(handles.mainaxes,'Position',pos);
-% sliderpos([1,3]) = pos([1,3]);
-% set(handles.frameslider,'Position',sliderpos);
+txpos = get(handles.txMoviename,'Position');
 
-% stuff below axes: match with of axes
-if isfield( handles, 'bottom_tags' )
-   ntags = numel(handles.bottom_tags);
-else
-   ntags = 0;
-end
+axpos(4) = figpos(4)-axpos(2)-txpos(4);
+maxdright = max([handles.upperrightpanel_dright(:);handles.lowerrightpanel_dright(:)]);
+axpos(3) = figpos(3)-maxdright-10;
+set(handles.mainaxes,'Position',axpos);
+txpos(2) = axpos(2)+axpos(4);
+txpos(3) = axpos(3);
+set(handles.txMoviename,'Position',txpos);
+
+ntags = numel(handles.bottom_tags);
 for fni = 1:ntags
   fn = handles.bottom_tags{fni};
   h = handles.(fn);
   pos = get(h,'Position');
-  %pos(1) = figpos(3)*handles.bottom_dleft_norm(fni);
-  %pos(3) = figpos(3) - handles.rightpanel_dright(fni)-pos(1);
-  pos(3) = axpos(3);
+  pos(3) = axpos(3)-10;
   set(h,'Position',pos); 
 end
 
@@ -2798,10 +2795,15 @@ lclSetFrame(handles,f1);
 
 function pbPlay_Callback(hObject, eventdata, handles)
 if strcmpi(get(hObject,'string'),'>')
+  fix_Play(handles,hObject,0.5);
+else
+  handles.isplaying = false;
+  guidata(hObject,handles);
+end
+function pbPlayFast_Callback(hObject, eventdata, handles)
+if strcmpi(get(hObject,'string'),'>>')
   fix_Play(handles,hObject);
 else
   handles.isplaying = false;
   guidata(hObject,handles);
-  drawnow();
-  set(hObject,'string','>','backgroundcolor',[0,.5,0]);
 end

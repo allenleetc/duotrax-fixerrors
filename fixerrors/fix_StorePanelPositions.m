@@ -2,26 +2,31 @@ function handles = fix_StorePanelPositions(handles)
 % store the positions of the panels in the GUI
 % splintered from fixerrorsgui 6/23/12 JAB
 
-% store positions of right side panels
-handles.rightpanel_tags = {'seqinfopanel','navigationpanel',...%'seekpanel',
-  'editpanel',...
-  'deletepanel','interpolatepanel','connectpanel','swappanel','extendpanel',...
-  'autotrackpanel','flippanel','manytrackpanel', 'addnewtrackpanel',...
-  'superposetrackspanel'};
 figpos = get(handles.figure1,'Position');
 
-ntags = numel(handles.rightpanel_tags);
-handles.rightpanel_dright = nan(1,ntags);
+handles.upperrightpanel_tags = {'editpanel' 'swappanel'};
+ntags = numel(handles.upperrightpanel_tags);
+handles.upperrightpanel_dright = nan(1,ntags);
+hnadles.upperrightpanel_dtop = nan(1,ntags);
 for fni = 1:ntags
-  fn = handles.rightpanel_tags{fni};
+  fn = handles.upperrightpanel_tags{fni};
   h = handles.(fn);
   pos = get(h,'Position');
-  handles.rightpanel_dright(fni) = figpos(3)-pos(1);
+  handles.upperrightpanel_dright(fni) = figpos(3)-pos(1);
+  handles.upperrightpanel_dtop(fni) = figpos(4)-pos(2);
+end
+
+handles.lowerrightpanel_tags = {'navigationpanel'};
+ntags = numel(handles.lowerrightpanel_tags);
+handles.lowerrightpanel_dright = nan(1,ntags);
+for fni = 1:ntags
+  fn = handles.lowerrightpanel_tags{fni};
+  h = handles.(fn);
+  pos = get(h,'Position');
+  handles.lowerrightpanel_dright(fni) = figpos(3)-pos(1);
 end
   
-% stuff below the axes: only width changes (to match width of axes)
-% handles.bottom_tags = {...%'printbutton','flipimage_checkbox', 'showdead_checkbox',...
-%   'frameinfopanel' 'pnlNav'};
+handles.bottom_tags = {'frameinfopanel' 'pnlNav'};
 % ntags = numel(handles.bottom_tags);
 % handles.bottom_width_norm = nan(1,ntags);
 % handles.bottom_dleft_norm = nan(1,ntags);
