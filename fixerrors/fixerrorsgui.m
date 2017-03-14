@@ -172,6 +172,8 @@ if ~didload,
   handles.doneseqs = [];
 end
 
+handles.swapevents = zeros(1,0);
+
 % initialize gui
 
 set(handles.txMoviename,'string',handles.moviename);
@@ -871,6 +873,12 @@ cellfun(@(f)assert(isequal(trx(1).(f),trx(2).(f))),FLDSMATCH);
 
 nswap = numel(handles.swapevents);
 for fld=FLDSSWAP,fld=fld{1}; %#ok<FXSET>
+  if ~isfield(trx,fld)
+    
+    warningNoTrace('fixerrors:fld','Field ''%s'' is missing from trx.',fld);
+    continue;
+  end
+  
   assert(isequal(size(trx(1).(fld)),size(trx(2).(fld)))); 
   for i=1:nswap
     swapfrm = handles.swapevents(i);
@@ -1178,9 +1186,6 @@ if ~isalive(handles.trx(fly1),f) || ~isalive(handles.trx(fly2),f),
   return;
 end
 
-if ~isfield(handles,'swapevents')
-  handles.swapevents = zeros(1,0);
-end
 handles.swapevents(1,end+1) = f;
 
 handles = fix_SwapIdentities( handles, f, fly1, fly2 );
@@ -2807,7 +2812,7 @@ else
 end
 function pbPlayFast_Callback(hObject, eventdata, handles)
 if strcmpi(get(hObject,'string'),'>>')
-  fix_Play(handles,hObject,'speedfac',inf,'speedfacseq',0.5);
+  fix_Play(handles,hObject,'speedfac',inf,'speedfacseq',0.4);
 else
   handles.isplaying = false;
   guidata(hObject,handles);
@@ -2821,7 +2826,7 @@ else
 end
 function pbBackFast_Callback(hObject, eventdata, handles)
 if strcmpi(get(hObject,'string'),'<<')
-  fix_Play(handles,hObject,'speedfac',inf,'speedfacseq',0.5,'playdir',-1);
+  fix_Play(handles,hObject,'speedfac',inf,'speedfacseq',0.4,'playdir',-1);
 else
   handles.isplaying = false;
   guidata(hObject,handles);

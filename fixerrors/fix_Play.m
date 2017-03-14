@@ -41,8 +41,9 @@ for f = frmsPlay
   handles.f = f;
   fix_SetFrameNumber(handles);
   fix_PlotFrame(handles);
+  guidata(hObject,handles);
   drawnow;
-  handles = guidata(hObject);
+  %handles = guidata(hObject);
 
   if handles.frmIsSeq(f)
     dtFrm = toc;
