@@ -873,7 +873,13 @@ FLDSMATCH = {'firstframe' 'endframe' 'nframes' 'off' 'roi' 'arena' ...
 FLDSSWAP = {'x' 'y' 'a' 'b' 'theta' 'wing_anglel' 'wing_angler' 'dt' ...
   'timestamps' 'wingtype' 'xwingl' 'ywingl' 'xwingr' 'ywingr' 'x_mm' ...
   'y_mm' 'theta_mm' 'a_mm' 'b_mm'};
-cellfun(@(f)assert(isequal(trx(1).(f),trx(2).(f))),FLDSMATCH);  
+
+for fld=FLDSMATCH,fld=fld{1}; %#ok<FXSET>
+  if isfield(trx,fld)
+    assert(isequaln(trx(1).(fld),trx(2).(fld)),...
+      'Unexpected difference between trx in field ''%s''.',fld);
+  end
+end
 
 nswap = numel(handles.swapevents);
 for fld=FLDSSWAP,fld=fld{1}; %#ok<FXSET>
