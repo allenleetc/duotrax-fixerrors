@@ -10,6 +10,10 @@ So far tested/developed only Windows7+R2016b. Use of Matlab R2014b or later is p
 
 Just git clone or download the repo. In Matlab, navigate to <DuoTraxFixErrors>/fixerrors and type 'fixerrors'.
 
+### Open Issues ###
+* When trx with wingtracking are supplied, "Flip Orientations" does not do anything intelligent with the wing fields .wing_anglel, .wing_angler, etc. These remain unchanged.
+
+
 ### Startup ###
 
 On startup, you will be asked to specify the following files/information:
