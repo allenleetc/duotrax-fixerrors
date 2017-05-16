@@ -1,17 +1,16 @@
 function [suspicious,dataperfly,params] = suspicious_sequences(matname,annname,varargin)
 
 [MINERRJUMPFRAC,CLOSELENGTH,MINORIENTCHANGE,MAXMAJORFRAC,MINWALKVEL,MATCHERRCLOSE,...
-  MINANGLEDIFF,MAXDISTCLOSEFRAC] = ...
+  MINANGLEDIFF,MAXDISTCLOSEFRAC,douserseqs] = ...
   myparse(varargin,'minerrjumpfrac',.2,'closelength',20,'minorientchange',pi/4,...
   'maxmajorfrac',2/3,'minwalkvel',1,'matcherrclose',10,'minanglediff',pi/2,...
-  'maxdistclosefrac',2);
+  'maxdistclosefrac',2,'douserseqs',1);
 
 %% load data
-if ~isstr(matname),
+if ~ischar(matname)
   dataperfly = matname;
 else
   dataperfly = load_tracks(matname);
-  %dataperfly = createdata_perfile('',matname,'',false);
 end
 nflies = length(dataperfly);
 nframes = max(getstructarrayfield(dataperfly,'endframe'));
@@ -234,12 +233,26 @@ for i = 1:cols(swappairs),
 end
 
 %% find istouching
+fprintf('detecting istouching...\n');
 assert(isvector(istouching) && numel(istouching)==nframes);
 istouching = imclose(istouching,se);
 [starts,ends] = get_interval_ends(istouching);
 for j = 1:length(starts)
   idx = starts(j):ends(j)-1;
   addsequence([1 2],'touch',idx,ones(size(idx)));
+end
+
+%% user-defined seqs
+if douserseqs && isfield(dataperfly,'susp')
+  fprintf('detecting user-set suspiciousness...\n');
+  usersusp = getstructarrayfield(dataperfly,'susp');
+  assert(size(usersusp,1)==2);
+  usersusp = any(logical(usersusp),1);
+  [starts,ends] = get_interval_ends(usersusp);
+  for j = 1:length(starts)
+    idx = starts(j):ends(j)-1;
+    addsequence([1 2],'user',idx,ones(size(idx)));
+  end
 end
 
 %% find frames, flies in which the major axis length is large

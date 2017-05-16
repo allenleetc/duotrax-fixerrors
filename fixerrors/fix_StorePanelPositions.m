@@ -4,7 +4,7 @@ function handles = fix_StorePanelPositions(handles)
 
 figpos = get(handles.figure1,'Position');
 
-handles.upperrightpanel_tags = {'editpanel' 'swappanel'};
+handles.upperrightpanel_tags = {'editpanel' 'swappanel' 'flippanel'};
 ntags = numel(handles.upperrightpanel_tags);
 handles.upperrightpanel_dright = nan(1,ntags);
 hnadles.upperrightpanel_dtop = nan(1,ntags);

@@ -22,8 +22,8 @@ function varargout = read_ann(filename,varargin)
 
 [p,f,e] = fileparts(filename);
 filenameS = [f e];
-if strcmp(filenameS,'roidata.mat')
-  roifname = fullfile(p,[f e]);
+if strcmp(filenameS,'READANN_DUMMY')
+  roifname = fullfile(p,'roidata.mat');
   tdfname = fullfile(p,'trackingdata.mat');
   bgfname = fullfile(p,'bgdata.mat');
   %fprintf(1,'Fake read_ann from %s/%s/%s.\n',roifname,tdfname,bgfname);  

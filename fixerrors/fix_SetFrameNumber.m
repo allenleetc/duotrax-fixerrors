@@ -40,11 +40,11 @@ if isempty(i),
 else
   set(handles.suspframetext,'string',sprintf('Susp: %f',handles.seq.suspiciousness(i)));
 end
-if handles.frmIsSeq(handles.f)
-  handles.txIsTouch.Visible = 'on';
-else
-  handles.txIsTouch.Visible = 'off';
-end
+% if handles.frmIsSeq(handles.f)
+%   handles.txIsTouch.Visible = 'on';
+% else
+handles.txIsTouch.Visible = 'off';
+% end
 if ~isempty(handles.motionobj),
   if ~isalive(handles.trx(handles,motionobj{2}),handles.f),
     handles.motionobj = [];

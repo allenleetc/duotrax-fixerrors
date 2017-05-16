@@ -6,6 +6,7 @@ isbirth = false; isdeath = false;
 isswap = false; isjump = false;
 isorientchange = false; isorientvelmismatch = false;
 islargemajor = false; istouch = false;
+isuser = false;
 for i = 1:length(handles.seqs),
   if ~isempty( strfindi(handles.seqs(i).type,'dummy') ),
     continue;
@@ -24,6 +25,9 @@ if isswap,
 end
 if istouch
   s{end+1} = 'Is Touching';
+end
+if isuser
+  s{end+1} = 'User Defined';
 end
 if isjump,
   s{end+1} = 'Large Jump';
