@@ -20,20 +20,21 @@ On startup, you will be asked to specify the following files/information:
     1. roidata.mat
     2. trackingdata.mat
     3. bgdata.mat
-* To supply user-generated suspicious frames, add a field .susp to the trx-file. For now, this should be a row vector the same size as trx(i).x, consisting of 0's or 1's. Frames where .susp==1 will be considered suspicious in the UI.
-* At startup, you will be prompted for "Suspiciousness Parameters" in a large dialog with multiple inputs. These were used by the original fixerrors to calculate and find suspicious frames. At the moment, these values can all be set to NaN.
+* To supply user-generated suspicious frames, add a field .susp to the trx structure in the trxfile. For now, this should be a row vector the same size as trx(i).x, consisting of 0's or 1's. Frames where .susp==1 will be considered suspicious in the UI. (A .susp vector must be added to both tracks, ie trx(1).susp and trx(2).susp must both be vectors of 0's and 1's. They can be identical however.)
+* At startup, you will be prompted for "Suspiciousness Parameters" in a large dialog box with multiple inputs. These were used by the original Fixerrors to calculate and find suspicious frames. At the moment, these values can all be set to NaN.
 
 At this stage, the main UI should appear.
 
 ### Usage/Workflows ###
 
-This prototype supports two main workflows to find and correct swapped fly identities in the tracking.
+This prototype supports two main workflows to find and correct errors in the tracking.
 
 **Workflow 1: Browsing Suspicious Sequences, Fixerrors-style**
 
 This workflow uses the Sequence Navigation and Navigation Tools panes and is similar to the original fixerrors. All "bouts" of frames where the two flies are touching are compiled into a list of Suspicious Sequences. The UI opens with the first Sequence on display. You can play this sequence using the "Play Seq" or "Play Seq Slow" buttons; the purple buttons provide shortcuts to navigate to the start, middle, and end of the sequence.
 
 If it appears that the fly identities are swapped during the sequence, this can be fixed using the "Edit Tools":
+
 * Swap Identities: Hit "Go" and then follow the directions to swap the fly identities **from the selected frame until the end of the movie.**
 * Flip Orientation: Hit "Go", select a fly by clicking on it, then follow directions to flip the selected fly's orientation for a range of frames.
 
@@ -46,6 +47,6 @@ A second workflow simply lets you play through the movie, correcting issues as y
 While browsing the movie, if there is an issue, again, you can use the Edit Tools as above.
 
 ### Notes ###
-After making all corrections, I would recommend playing the entire movie start to finish. When making corrections using Suspicious Sequences, it is possible that the flies get exchanged when they are relatively far apart. 
+After making all corrections, you can play the entire movie start to finish. When making corrections using Suspicious Sequences, it is possible that the flies get exchanged when they are relatively far apart. 
 
-This is a prototype and there are some rough edges and clunky behavior. We can iterate and streamline to make this as effective as possible.
+This is a prototype and there are some rough edges and clunky behavior. We can iterate and streamline to improve the workflow.
