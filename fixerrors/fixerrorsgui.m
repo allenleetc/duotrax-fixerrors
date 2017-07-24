@@ -879,21 +879,19 @@ function undobutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-top = length( handles.undolist );
-if ~isempty( handles.undolist ) && ~iscell( handles.undolist{1} )
-   % this happens when there's only one undo item
-   % (length is length of that item, not the list)
-   top = 1;
+
+if isempty(handles.undolist)
+  msgbox('No actions to undo.','Undo');
 end
 
+assert(iscell(handles.undolist{1}));
+top = length(handles.undolist);
+tfUndoOccurred = false;
 for ui = top:-1:1
-   try
-      a = strcmp( handles.undolist{ui}{1}, 'delete' );
-   catch % happened once, not replicated
-      keyboard
-   end
-   if strcmp( handles.undolist{ui}{1}, 'delete' )
-     assert(false);
+  action = handles.undolist{ui}{1};
+  switch action 
+    case 'delete'
+      assert(false);
 %       fprintf( 1, 'undoing deletion item %d\n', ui );
 %       f = handles.undolist{ui}{2};
 %       fly = handles.undolist{ui}{3};
@@ -919,10 +917,8 @@ for ui = top:-1:1
 %       handles = fix_FixUpdateFly( handles, fly );
 %       handles = fix_FixBirthEvent( handles, fly );
 %       handles = fix_FixDeathEvent( handles, fly );
-      
-      break
-   elseif strcmp( handles.undolist{ui}{1}, 'swap' )
-      fprintf( 1, 'undoing swap item %d\n', ui );
+    case 'swap'
+      fprintf(1,'undoing swap item %d\n',ui);
       f = handles.undolist{ui}{2};
       fly1 = handles.undolist{ui}{3}(1);
       fly2 = handles.undolist{ui}{3}(2);
@@ -931,10 +927,10 @@ for ui = top:-1:1
       fix_SetFlySelected(handles,fly1,false);
       fix_SetFlySelected(handles,fly2,false);
       
-      break      
-   elseif strcmp( handles.undolist{ui}{1}, 'interpolate' ) || ...
-          strcmp( handles.undolist{ui}{1}, 'autotrack' )
-        assert(false);
+      tfUndoOccurred = true;
+      break;
+    case {'interpolate' 'autotrack'}
+      assert(false);
 %       fprintf( 1, 'undoing interpolation/autotracking item %d\n', ui );
 %       if length( handles.undolist{ui} ) == 4
 %          f0 = handles.undolist{ui}{2}(1);
@@ -957,10 +953,8 @@ for ui = top:-1:1
 %       end
 %       
 %       handles = fix_FixUpdateFly( handles, fly );
-
-      break
-   elseif strcmp( handles.undolist{ui}{1}, 'connect' )
-     assert(false);
+    case 'connect'
+      assert(false);
 %       fprintf( 1, 'undoing connection item %d\n', ui );
 %       
 %       f1 = handles.undolist{ui}{2}(1);
@@ -997,25 +991,23 @@ for ui = top:-1:1
 %          handles.seqs(si).type = handles.seqs(si).type(length( 'dummy' ) + 1:end);
 %       end
 
-      break
-   elseif strcmp( handles.undolist{ui}{1}, 'flip' )
-      fprintf( 1, 'undoing flip item %d\n', ui );
-      frame = handles.undolist{ui}{2};
-      f = handles.undolist{ui}{3};
-      fly = handles.undolist{ui}{4};
-
-      fix_SetFlySelected(handles,fly,false);
-      for f = frame:f,
-         i = handles.trx(fly).off+(f);
-         handles.trx(fly).theta(i) = modrange(handles.trx(fly).theta(i)+pi,-pi,pi);
-      end
-      handles = fix_FixUpdateFly(handles,fly);
-      
-      break
-   elseif strcmp( handles.undolist{ui}{1}, 'manytrack' )
-     assert(false);
-      fprintf( 1, 'undoing manytrack item %d\n', ui );
-
+  case 'flip'
+    fprintf( 1, 'undoing flip item %d\n', ui );
+    frame = handles.undolist{ui}{2};
+    f = handles.undolist{ui}{3};
+    fly = handles.undolist{ui}{4};
+    
+    fix_SetFlySelected(handles,fly,false);
+    for f = frame:f
+      i = handles.trx(fly).off+(f);
+      handles.trx(fly).theta(i) = modrange(handles.trx(fly).theta(i)+pi,-pi,pi);
+    end
+    handles = fix_FixUpdateFly(handles,fly);
+    
+    tfUndoOccurred = true;
+    break;
+  case 'manytrack'
+    assert(false);
 %       f0 = handles.undolist{ui}{2}(1);
 %       f1 = handles.undolist{ui}{2}(2);
 %       flies = handles.undolist{ui}{3};
@@ -1032,19 +1024,15 @@ for ui = top:-1:1
 %          handles = fix_FixUpdateFly( handles, fly );
 %       end
 
-      break
-   elseif strcmp( handles.undolist{ui}{1}, 'addnew' )
-      fprintf( 1, 'undoing addnewtrack item %d\n', ui );
+    case 'addnew'
+      assert(false);
       
-      fly = handles.undolist{ui}{2};
-
-      fix_DeleteFly( handles, fly );
-      
-      break
-   elseif strcmp( handles.undolist{ui}{1}, 'superpose' )
-     assert(false);
-      fprintf( 1, 'undoing superposetrack item %d\n', ui )
-      
+%       fprintf( 1, 'undoing addnewtrack item %d\n', ui );
+%       fly = handles.undolist{ui}{2};
+%       fix_DeleteFly( handles, fly );
+    case 'superpose'
+      assert(false);
+%       fprintf( 1, 'undoing superposetrack item %d\n', ui )    
 %       fly = handles.undolist{ui}{2};
 %       f0 = handles.undolist{ui}{3};
 %       f1 = handles.undolist{ui}{4};
@@ -1055,32 +1043,16 @@ for ui = top:-1:1
 %       handles.trx(fly) = fix_CatTracks( fix_CatTracks( t0, trk ), t2 );
 % 
 %       fix_FixUpdateFly( handles, fly );
-
-      break
-   elseif ~strcmp( handles.undolist{ui}{1}, 'correct' )
-      warning( 'don''t know how to undo action ''%s'', item %d\n', handles.undolist{ui}{1}, ui );
-   end
+    case 'correct'
+      % none
+    otherwise
+      warningNoTrace('dtfe:undo','Don''t know how to undo action ''%s'', item %d\n',...
+        action,ui);
+  end
 end
 
-% remove undone item from undo list
-if ui == 1
-   if length( handles.undolist ) == 1
-      handles.undolist = {};
-   else
-      handles.undolist = handles.undolist{2:end};
-   end
-elseif ui == length( handles.undolist )
-   handles.undolist(end) = [];
-elseif ui > 0
-   try % untested
-      handles.undolist = handles.undolist{[1:ui-1 ui+1:length( handles.undolist )]};
-   catch err
-      keyboard
-      handles.undolist
-      ui
-      handles.seqs(handles.seqi)
-      rethrow( err )
-   end
+if tfUndoOccurred
+  handles.undolist(ui) = [];
 end
 
 handles.nselect = 0;
