@@ -26,7 +26,7 @@ for fly = 1:handles.nflies,
     continue;
   end
   if strcmpi(handles.plotpath,'all flies') || ...
-      (strcmpi(handles.plotpath,'seq flies') && ismember(fly, handles.seq.flies)),
+     strcmpi(handles.plotpath,'seq flies') && ismember(fly,handles.seqs(handles.seqi).flies)
      try
         set(handles.hpath(fly),'visible','on'); % < r2014b
      catch

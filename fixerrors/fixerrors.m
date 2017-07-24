@@ -8,6 +8,7 @@ function fixerrors
 mpath = mfilename('fullpath');
 mpath = fileparts(mpath);
 addpath(mpath);
+addpath(fullfile(mpath,'JavaTableWrapper'));
 
 %% set all defaults
 
@@ -277,6 +278,10 @@ if DORESTART
   end
 else
   undolist = {};
+end
+
+if ~isfield(seqs,'status')
+  [seqs.status] = deal(SeqStatus.UNKNOWN);
 end
 
 trx = fixerrorsgui(seqs,moviename,trx0,annname,params,matname,tmpfilename,...

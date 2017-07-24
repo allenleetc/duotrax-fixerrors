@@ -1,22 +1,22 @@
-function handles = SetSeq(handles,seqi,isfirstframe)
+function handles = fix_SetSeq(handles,seqi,isfirstframe)
 % set the GUI state for displaying a particular sequence index
 % splintered from fixerrorsgui 6/23/12 JAB
 
 handles.seqi = seqi;
-handles.seq = handles.seqs(seqi);
-handles.f = handles.seq.frames(1);
+seq = handles.seqs(seqi);
+handles.f = seq.frames(1);
 handles.nselect = 0;
 handles.selected = [];
 set(handles.errnumbertext,'string',sprintf('Error: %d/%d',seqi,length(handles.seqs)));
-set(handles.seqframestext,'string',sprintf('Frames: %d:%d',handles.seq.frames(1),handles.seq.frames(end)));
-set(handles.seqfliestext,'string',['Flies: [',num2str(handles.seq.flies),']']);
-set(handles.seqtypetext,'string',sprintf('Type: %s',handles.seq.type));
-set(handles.seqsusptext,'string',sprintf('Susp: %f',max(handles.seq.suspiciousness)));
+set(handles.seqframestext,'string',sprintf('Frames: %d:%d',seq.frames(1),seq.frames(end)));
+set(handles.seqfliestext,'string',['Flies: [',num2str(seq.flies),']']);
+set(handles.seqtypetext,'string',sprintf('Type: %s',seq.type));
+set(handles.seqsusptext,'string',sprintf('Susp: %f',max(seq.suspiciousness)));
 
 % set fly colors so that flies that are close have different colors
 x = nan(1,handles.nflies);
 y = nan(1,handles.nflies);
-f = round(mean([handles.seq.frames(1),handles.seq.frames(end)]));
+f = round(mean([seq.frames(1),seq.frames(end)]));
 for fly = 1:handles.nflies,
   if ~isalive(handles.trx(fly),f),
     continue;
@@ -27,11 +27,11 @@ for fly = 1:handles.nflies,
 end
 
 D = squareform(pdist([x;y]'));
-handles.colors(handles.seq.flies,:) = handles.colors0(handles.colororder(1:length(handles.seq.flies)),:);
+handles.colors(seq.flies,:) = handles.colors0(handles.colororder(1:length(seq.flies)),:);
 isassigned = false(1,handles.nflies);
-isassigned(handles.seq.flies) = true;
-D(:,handles.seq.flies) = nan;
-for i = length(handles.seq.flies)+1:handles.nflies,
+isassigned(seq.flies) = true;
+D(:,seq.flies) = nan;
+for i = length(seq.flies)+1:handles.nflies,
   [mind,fly] = min(min(D(isassigned,:),[],1));
   if isnan(mind),
     handles.colors(~isassigned,:) = handles.colors0(handles.colororder(i:end),:);

@@ -29,13 +29,7 @@ end
 
 % --- Executes just before fixerrorsgui is made visible.
 function fixerrorsgui_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to fixerrorsgui (see VARARGIN)
 
-% Choose default command line output for fixerrorsgui
 handles.output = hObject;
 
 % read inputs
@@ -120,7 +114,7 @@ handles = InitializeMainAxes(handles);
 % initialize state
 isseqleft = false;
 for i = 1:length(handles.seqs),
-  if isempty( strfindi(handles.seqs(i).type,'dummy') ),
+  if handles.seqs(i).status==SeqStatus.UNKNOWN
     isseqleft = true;
     break;
   end
@@ -183,7 +177,6 @@ set(handles.txMoviename,'string',handles.moviename);
 InitializeFrameSlider(handles);
 fix_SetFrameNumber(handles);
 
-
 set(handles.flippanel,'Parent',handles.figure1,...
   'Position',handles.swappanel.Position,...
   'Units',handles.swappanel.Units);
@@ -192,7 +185,15 @@ set(handles.txtFlipDesc,...
   'Position',handles.txtSwapDesc.Position);
 handles = fix_StorePanelPositions(handles);
 
-
+tblSeq = handles.tblSeq;
+pos = tblSeq.Position;
+posunits = tblSeq.Units;
+pnlSeq = tblSeq.Parent;
+cbk = @(irow)cbkSelectSeq(pnlSeq,irow);
+delete(tblSeq);
+seqTable = SeqTable(pnlSeq,pos,posunits,cbk);
+seqTable.setSeqData(handles.seqs);
+handles.seqTable = seqTable;
 
 guidata(hObject,handles);
 
@@ -619,25 +620,24 @@ function sortbymenu_CreateFcn(hObject, eventdata, handles)
 fix_SetCreatedObjectBgColor( hObject, 'white' );
 
 
-% --- Executes on button press in correctbutton.
 function correctbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to correctbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% add to undolist
-handles.undolist{end+1} = {'correct',handles.seqi,handles.seq};
+handles.undolist{end+1} = {'correct',handles.seqi,handles.seqs(handles.seqi)};
 handles.needssaving = 1;
 
-% move from seqs to doneseqs
-if isempty(handles.doneseqs),
-  handles.doneseqs = handles.seq;
-else
-  handles.doneseqs(end+1) = handles.seq;
-end
-handles.seqs(handles.seqi).type = ['dummy', handles.seqs(handles.seqi).type];
+handles.seqs(handles.seqi).status = SeqStatus.CORRECT;
+handles.seqs(handles.seqi).statusTS = now;
 
-handles.seqs = check_suspicious_sequences(handles.trx,handles.annname,handles.seqs,handles.params{:});
+if isempty(handles.doneseqs)
+  handles.doneseqs = handles.seqs(handles.seqi);
+else
+  handles.doneseqs(end+1) = handles.seqs(handles.seqi);
+end
+
+handles.seqs = check_suspicious_sequences(handles.trx,handles.annname,...
+  handles.seqs,handles.params{:});
+
+handles.seqTable.setSeqData(handles.seqs);
 
 fix_SetErrorTypes(handles);
 
@@ -649,21 +649,7 @@ if strcmpi(get(handles.correctbutton,'string'),'finish')
   return;
 end
 
-try
-  contents = get(handles.nexterrortypemenu,'string');
-  if length(contents) == 1 
-    s = contents; % AL cell instead of char see L638
-  else
-    v = get(handles.nexterrortypemenu,'value');
-    if v > length(contents),
-      set(handles.nexterrortypemenu,'value',length(contents));
-      v = length(contents);
-    end
-    s = contents{v};
-  end
-catch
-  keyboard;
-end
+s = lclGetPUMContents(handles.nexterrortypemenu);
 
 % what is the next type of error
 type_list = nexterrortype_type();
@@ -674,49 +660,46 @@ susp = [];
 idx = [];
 
 % find an error of type nexttype
-for i = 1:length(handles.seqs),
-  
-  % if this is the right type of error
-  if strcmpi(handles.seqs(i).type,nexttype),
-    
+for i = 1:length(handles.seqs)  
+  if strcmpi(handles.seqs(i).type,nexttype) && handles.seqs(i).status==SeqStatus.UNKNOWN
     % store frames, flies, suspiciousness for this seq
     if strcmpi(nexttype,'swap') || strcmpi(nexttype,'touch') || strcmpi(nexttype,'user')
-      flies(end+1) = handles.seqs(i).flies(1)*handles.nflies+handles.seqs(i).flies(2);
+      flies(end+1) = handles.seqs(i).flies(1)*handles.nflies+handles.seqs(i).flies(2); %#ok<AGROW>
     else
-      flies(end+1) = handles.seqs(i).flies;
+      flies(end+1) = handles.seqs(i).flies; %#ok<AGROW>
     end
-    frames(end+1) = handles.seqs(i).frames(1);
-    susp(end+1) = max(handles.seqs(i).suspiciousness);
-    idx(end+1) = i;
-    
+    frames(end+1) = handles.seqs(i).frames(1); %#ok<AGROW>
+    susp(end+1) = max(handles.seqs(i).suspiciousness); %#ok<AGROW>
+    idx(end+1) = i; %#ok<AGROW>
   end
-  
 end
 
-if isempty(flies), keyboard; end
+if isempty(flies)
+  keyboard; 
+end
 
 % choose error of this type if there are more than one
-contents = get(handles.sortbymenu,'string');
-sortby = contents{get(handles.sortbymenu,'value')};
-if strcmpi(sortby,'suspiciousness'),
+sortby = lclGetPUMContents(handles.sortbymenu);
+if strcmpi(sortby,'suspiciousness')
   j = argmax(susp);
   handles = fix_SetSeq(handles,idx(j));
-elseif strcmpi(sortby,'frame number'),
+elseif strcmpi(sortby,'frame number')
   j = argmin(frames);
   handles = fix_SetSeq(handles,idx(j));
-elseif strcmpi(sortby,'fly'),
-  if strcmpi(handles.seq.type,'swap') || strcmpi(handles.seq.type,'touch') 
-    currfly = handles.seq.flies(1)*handles.nflies +handles.seq.flies(2);
+elseif strcmpi(sortby,'fly')
+  seq = handles.seqs(handles.seqi);
+  if strcmpi(seq.type,'swap') || strcmpi(seq.type,'touch') 
+    currfly = seq.flies(1)*handles.nflies + seq.flies(2);
   else
-    currfly = handles.seq.flies;
+    currfly = seq.flies;
   end
-  issamefly = flies == currfly;
-  if any(issamefly),
+  issamefly = flies==currfly;
+  if any(issamefly)
     nextfly = currfly;
   else
     nextfly = min(flies);
   end
-  nextflies = find(flies == nextfly);
+  nextflies = find(flies==nextfly);
   j = nextflies(argmin(frames(nextflies)));
   handles = fix_SetSeq(handles,idx(j));
 end
@@ -1095,7 +1078,7 @@ elseif ui > 0
       keyboard
       handles.undolist
       ui
-      handles.seq
+      handles.seqs(handles.seqi)
       rethrow( err )
    end
 end
@@ -2789,14 +2772,17 @@ guidata( hObject, handles )
 
 function pbSeqStart_Callback(hObject, eventdata, handles)
 SEQDF = 20;
-f0 = max(1,handles.seq.frames(1)-SEQDF);
+seq = handles.seqs(handles.seqi);
+f0 = max(1,seq.frames(1)-SEQDF);
 lclSetFrame(handles,f0);
 function pbSeqCtr_Callback(hObject, eventdata, handles)
-f = handles.seq.frames(1);
+seq = handles.seqs(handles.seqi);
+f = seq.frames(1);
 lclSetFrame(handles,f);
 function pbSeqEnd_Callback(hObject, eventdata, handles)
 SEQDF = 20;
-f1 = min(handles.nframes,handles.seq.frames(end)+SEQDF);
+seq = handles.seqs(handles.seqi);
+f1 = min(handles.nframes,seq.frames(end)+SEQDF);
 lclSetFrame(handles,f1);
 
 function pbPlay_Callback(hObject, eventdata, handles)
@@ -2827,3 +2813,15 @@ else
   handles.isplaying = false;
   guidata(hObject,handles);
 end
+
+function cbkSelectSeq(pnlSeq,irow)
+disp('TODO: cbkSelectSeq');
+
+function s = lclGetPUMContents(h)
+contents = get(h,'string');
+v = get(h,'value');
+if v > length(contents)
+  set(h,'value',length(contents));
+  v = length(contents);
+end
+s = contents{v};

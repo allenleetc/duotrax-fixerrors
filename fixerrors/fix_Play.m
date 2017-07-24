@@ -16,8 +16,8 @@ guidata(hObject,handles);
 
 switch get(hObject,'tag')
   case {'playstopbutton' 'playstopbuttonslow'}
-    f0 = max(1,handles.seq.frames(1)-10);
-    f1 = min(handles.nframes,handles.seq.frames(end)+10);
+    f0 = max(1,handles.seqs(handles.seqi).frames(1)-10);
+    f1 = min(handles.nframes,handles.seqs(handles.seqi).frames(end)+10);
     switch playdir 
       case 1, frmsPlay=f0:f1;
       case -1, frmsPlay=f1:-1:f0;
@@ -62,7 +62,7 @@ for f = frmsPlay
 end
 
 if handles.isplaying
-  handles.f = handles.seq.frames(1);
+  handles.f = handles.seqs(handles.seqi).frames(1);
   fix_SetFrameNumber(handles);
   fix_PlotFrame(handles);  
 end

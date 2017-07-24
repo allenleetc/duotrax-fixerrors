@@ -18,44 +18,49 @@ LARGEMAJOR = meanmajor + MAXMAJORFRAC * (maxmajor-meanmajor);
 
 %% make sure flies haven't been deleted
 for s = 1:nseqs,
-  if ~isempty( strfindi( seqs(s).type, 'dummy' ) ), continue; end
-  isdeleted = false;
+  if seqs(s).status.isCorrect
+    continue; 
+  end
+%   isdeleted = false;
   for fly = seqs(s).flies,
-    if any(isnan(dataperfly(fly).x))
-      isdeleted = true;
-      break;
-    end
+    assert(~any(isnan(dataperfly(fly).x)));
+%     if any(isnan(dataperfly(fly).x))
+%       isdeleted = true;
+%       break;
+%     end
   end
-  if isdeleted
-    seqs(s).type = ['dummy', seqs(s).type];;
-  end
+%   if isdeleted
+%     seqs(s).type = ['dummy', seqs(s).type];;
+%   end
 end
 
 %% find births of tracks in the middle of the movie
 for s = 1:nseqs,
   if strcmpi(seqs(s).type,'birth')
-    fly = seqs(s).flies;
-    if dataperfly(fly).firstframe ~= seqs(s).frames
-      if dataperfly(fly).firstframe == 1
-        seqs(s).type = ['dummy', seqs(s).type];
-      else
-        seqs(s).frames = dataperfly(fly).firstframe;
-      end
-    end
+    assert(false);
+%     fly = seqs(s).flies;
+%     if dataperfly(fly).firstframe ~= seqs(s).frames
+%       if dataperfly(fly).firstframe == 1
+%         seqs(s).type = ['dummy', seqs(s).type];
+%       else
+%         seqs(s).frames = dataperfly(fly).firstframe;
+%       end
+%     end
   end
 end
 
 %% find deaths of tracks in the middle of the movie
 for s = 1:nseqs,
   if strcmpi(seqs(s).type,'death')
-    fly = seqs(s).flies;
-    if dataperfly(fly).endframe ~= seqs(s).frames
-      if dataperfly(fly).endframe == nframes
-         seqs(s).type = ['dummy', seqs(s).type];;
-      else
-        seqs(s).frames = dataperfly(fly).endframe;
-      end
-    end
+    assert(false);
+%     fly = seqs(s).flies;
+%     if dataperfly(fly).endframe ~= seqs(s).frames
+%       if dataperfly(fly).endframe == nframes
+%          seqs(s).type = ['dummy', seqs(s).type];;
+%       else
+%         seqs(s).frames = dataperfly(fly).endframe;
+%       end
+%     end
   end
 end
 
@@ -65,10 +70,11 @@ for s = 1:nseqs,
   f = seqs(s).frames;
   for fly = seqs(s).flies;
     isalive = f >= dataperfly(fly).firstframe & f <= dataperfly(fly).endframe;
-    if ~any(isalive)
-       seqs(s).type = ['dummy', seqs(s).type];;
-      break;
-    end
+    assert(all(isalive));
+%     if ~any(isalive)
+%        seqs(s).type = ['dummy', seqs(s).type];;
+%       break;
+%     end
   end
 end
 
@@ -82,49 +88,60 @@ for s = 1:nseqs,
     badidx = badidx | frames < dataperfly(flies(j)).firstframe | ...
       frames > dataperfly(flies(j)).endframe;
   end
-  if all(badidx),
-     seqs(s).type = ['dummy', seqs(s).type];;
-  else
-    seqs(s).frames = seqs(s).frames(~badidx);
-  end
+  assert(~any(badidx));
+%   if all(badidx),
+%      seqs(s).type = ['dummy', seqs(s).type];;
+%   else
+%     seqs(s).frames = seqs(s).frames(~badidx);
+%   end
 end
 
 %% find frames, flies where the fly jumps
 
 for s = 1:nseqs
   if ~strcmpi(seqs(s).type,'jump'), continue; end
-  fly = seqs(s).flies;
-  f = seqs(s).frames;
-  i = dataperfly(fly).off+(f);
-  [xpred,ypred] = predcenter(fly,f);
-  % error of prediction
-  err = sqrt((xpred - dataperfly(fly).x(i)).^2 + (ypred - dataperfly(fly).y(i)).^2);
-  if ~any(err > MINERRJUMP)
-    seqs(s).type = ['dummy', seqs(s).type];;
-  else
-    i0 = find(err>MINERRJUMP,1);
-    i1 = find(err>MINERRJUMP,1,'last');
-    seqs(s).frames = dataperfly(fly).firstframe-1 + i(i0:i1);
-  end
+  assert(false);
+%   fly = seqs(s).flies;
+%   f = seqs(s).frames;
+%   i = dataperfly(fly).off+(f);
+%   [xpred,ypred] = predcenter(fly,f);
+%   % error of prediction
+%   err = sqrt((xpred - dataperfly(fly).x(i)).^2 + (ypred - dataperfly(fly).y(i)).^2);
+%   if ~any(err > MINERRJUMP)
+%     seqs(s).type = ['dummy', seqs(s).type];;
+%   else
+%     i0 = find(err>MINERRJUMP,1);
+%     i1 = find(err>MINERRJUMP,1,'last');
+%     seqs(s).frames = dataperfly(fly).firstframe-1 + i(i0:i1);
+%   end
 end
 
 
 %% find frames, flies where there is a large change in orientation
 
 for s = 1:nseqs
-  if ~strcmpi(seqs(s).type,'orientchange'), continue; end
-  fly = seqs(s).flies;
-  f = seqs(s).frames;
-  i = dataperfly(fly).off+(f);
-  thetapred = predtheta(fly,f);
-  % error of prediction
-  err = abs(modrange(dataperfly(fly).theta(i)-thetapred,-pi,pi));
-  if ~any(err > MINORIENTCHANGE)
-    seqs(s).type = ['dummy', seqs(s).type];;
-  else
-    i0 = find(err>MINORIENTCHANGE,1);
-    i1 = find(err>MINORIENTCHANGE,1,'last');
-    seqs(s).frames = dataperfly(fly).firstframe-1 + i(i0:i1);
+  if strcmpi(seqs(s).type,'orientchange')
+    fly = seqs(s).flies;
+    f = seqs(s).frames;
+    i = dataperfly(fly).off+(f);
+    thetapred = predtheta(fly,f);
+    % error of prediction
+    err = abs(modrange(dataperfly(fly).theta(i)-thetapred,-pi,pi));
+    if ~any(err > MINORIENTCHANGE)
+      switch seqs(s).status
+        case SeqStatus.UNKNOWN
+          seqs(s).status = SeqStatus.CORRECTOTHER;
+        otherwise
+          % none, already correct
+      end
+    else
+      i0 = find(err>MINORIENTCHANGE,1);
+      i1 = find(err>MINORIENTCHANGE,1,'last');
+      seqs(s).frames = dataperfly(fly).firstframe-1 + i(i0:i1);
+      if seqs(s).status.isCorrect
+        seqs(s).status = SeqStatus.UNKNOWN;
+      end
+    end
   end
 end
 
@@ -133,69 +150,73 @@ end
 
 for s = 1:nseqs,
   if ~strcmpi(seqs(s).type,'swap'), continue; end
-  flies = seqs(s).flies;
-  fs = seqs(s).frames;
-  seqs(s).frames = fs;
-
-  isswap = false(size(fs));
-  % loop through frames
-  for f = fs,
-    % get predicted and observed positions of all flies in the current frame
-    xpred = zeros(1,2);
-    ypred = zeros(1,2);
-    thetapred = zeros(1,2);
-    xcurr = xpred;
-    ycurr = ypred;
-    thetacurr = thetapred;
-    for j = 1:2,
-      ii = dataperfly(flies(j)).off+(f);
-      [xpred(j),ypred(j)] = predcenter(flies(j),f);
-      thetapred(j) = predtheta(flies(j),f);
-      xcurr(j) = dataperfly(flies(j)).x(ii);
-      ycurr(j) = dataperfly(flies(j)).y(ii);
-      thetacurr(j) = dataperfly(flies(j)).theta(ii);
-    end  
-    
-    % compute all pairs distances
-    dcenter = dist2([xpred',ypred'],[xcurr',ycurr']);
-    dtheta = modrange(repmat(thetacurr,[length(thetapred),1])-repmat(thetapred',[1,length(thetacurr)]),-pi,pi).^2;
-    d = sqrt(dcenter + dtheta*ang_dist_wt);
-    % compute optimal
-    dopt = sum(diag(d));
+  assert(false);  
   
-    % compute swap
-    i1 = 1;
-    i2 = 2;
-    dcurr = dopt - d(i1,i1) - d(i2,i2) + d(i1,i2) + d(i2,i1);
-    err = dopt + MATCHERRCLOSE - dcurr;
-    
-    isswap(f-fs(1)+1) = err > 0;
-  end
-  
-  if ~any(isswap)
-    seqs(s).type = ['dummy', seqs(s).type];;
-  else
-    i0 = find(isswap,1);
-    i1 = find(isswap,1,'last');
-    seqs(s).frames = fs(i0:i1);
-  end
+%   flies = seqs(s).flies;
+%   fs = seqs(s).frames;
+%   seqs(s).frames = fs;
+% 
+%   isswap = false(size(fs));
+%   % loop through frames
+%   for f = fs,
+%     % get predicted and observed positions of all flies in the current frame
+%     xpred = zeros(1,2);
+%     ypred = zeros(1,2);
+%     thetapred = zeros(1,2);
+%     xcurr = xpred;
+%     ycurr = ypred;
+%     thetacurr = thetapred;
+%     for j = 1:2,
+%       ii = dataperfly(flies(j)).off+(f);
+%       [xpred(j),ypred(j)] = predcenter(flies(j),f);
+%       thetapred(j) = predtheta(flies(j),f);
+%       xcurr(j) = dataperfly(flies(j)).x(ii);
+%       ycurr(j) = dataperfly(flies(j)).y(ii);
+%       thetacurr(j) = dataperfly(flies(j)).theta(ii);
+%     end  
+%     
+%     % compute all pairs distances
+%     dcenter = dist2([xpred',ypred'],[xcurr',ycurr']);
+%     dtheta = modrange(repmat(thetacurr,[length(thetapred),1])-repmat(thetapred',[1,length(thetacurr)]),-pi,pi).^2;
+%     d = sqrt(dcenter + dtheta*ang_dist_wt);
+%     % compute optimal
+%     dopt = sum(diag(d));
+%   
+%     % compute swap
+%     i1 = 1;
+%     i2 = 2;
+%     dcurr = dopt - d(i1,i1) - d(i2,i2) + d(i1,i2) + d(i2,i1);
+%     err = dopt + MATCHERRCLOSE - dcurr;
+%     
+%     isswap(f-fs(1)+1) = err > 0;
+%   end
+%   
+%   if ~any(isswap)
+%     seqs(s).type = ['dummy', seqs(s).type];;
+%   else
+%     i0 = find(isswap,1);
+%     i1 = find(isswap,1,'last');
+%     seqs(s).frames = fs(i0:i1);
+%   end
   
 end
 
 %% find frames, flies in which the major axis length is large
 for s = 1:nseqs
-  if ~strcmpi(seqs(s).type,'largemajor'), continue; end
-  fly = seqs(s).flies;
-  f = seqs(s).frames;
-  i = dataperfly(fly).off+(f);
-  islargemajor = dataperfly(fly).a(i) > LARGEMAJOR;
-  if ~any(islargemajor),
-    seqs(s).type = ['dummy', seqs(s).type];;
-  else
-    i0 = find(islargemajor,1);
-    i1 = find(islargemajor,1,'last');
-    seqs(s).frames = dataperfly(fly).firstframe+i(i0:i1)-1;
-  end
+  if ~strcmpi(seqs(s).type,'largemajor'), continue; end  
+  assert(false);
+  
+%   fly = seqs(s).flies;
+%   f = seqs(s).frames;
+%   i = dataperfly(fly).off+(f);
+%   islargemajor = dataperfly(fly).a(i) > LARGEMAJOR;
+%   if ~any(islargemajor),
+%     seqs(s).type = ['dummy', seqs(s).type];;
+%   else
+%     i0 = find(islargemajor,1);
+%     i1 = find(islargemajor,1,'last');
+%     seqs(s).frames = dataperfly(fly).firstframe+i(i0:i1)-1;
+%   end
 end
 
 %% find frames, flies in which the velocity direction and orientation don't
@@ -203,38 +224,40 @@ end
 
 % compute velocity
 for s = 1:nseqs,
-  if ~strcmpi(seqs(s).type,'orientvelmismatch'), continue; end
-  fly = seqs(s).flies;  
-  if dataperfly(fly).nframes < 3,
-    continue;
-  end
-  f = seqs(s).frames;
-  i = sort(dataperfly(fly).off+(f));
-  if i(1) == 1, i0 = 2; else i0 = 1; end
-  if i(end) == dataperfly(fly).nframes, i1 = length(i)-1; else i1 = length(i); end
-  dx = (dataperfly(fly).x(i(i0:i1)+1) - dataperfly(fly).x(i(i0:i1)-1))/2;
-  dy = (dataperfly(fly).y(i(i0:i1)+1) - dataperfly(fly).y(i(i0:i1)-1))/2;
-  if i(1) == 1,
-    dx = [dataperfly(fly).x(2)-dataperfly(fly).x(1),dx];
-    dy = [dataperfly(fly).y(2)-dataperfly(fly).y(1),dy];
-  end
-  if i(end) == dataperfly(fly).nframes,
-    dx = [dx,dataperfly(fly).x(end)-dataperfly(fly).x(end-1)];
-    dy = [dy,dataperfly(fly).y(end)-dataperfly(fly).y(end-1)];
-  end
-  v = sqrt(dx.^2+dy.^2);
-  velang = atan2(dy,dx);
-  err = abs(modrange(velang-dataperfly(fly).theta(i),-pi,pi));
-  isreverse = (v >= MINWALKVEL) & (err > MINANGLEDIFF);
-  if ~any(isreverse), 
-    seqs(s).type = ['dummy', seqs(s).type];;
-    seqs(s).suspiciousness = 0;
-  else
-    i0 = find(isreverse,1);
-    i1 = find(isreverse,1,'last');
-    seqs(s).suspiciousness = err(i0:i1)-MINANGLEDIFF;
-    seqs(s).frames = dataperfly(fly).firstframe+i(i0:i1)-1;
-  end
+  if ~strcmpi(seqs(s).type,'orientvelmismatch'), continue; end  
+  assert(false);
+  
+%   fly = seqs(s).flies;  
+%   if dataperfly(fly).nframes < 3,
+%     continue;
+%   end
+%   f = seqs(s).frames;
+%   i = sort(dataperfly(fly).off+(f));
+%   if i(1) == 1, i0 = 2; else i0 = 1; end
+%   if i(end) == dataperfly(fly).nframes, i1 = length(i)-1; else i1 = length(i); end
+%   dx = (dataperfly(fly).x(i(i0:i1)+1) - dataperfly(fly).x(i(i0:i1)-1))/2;
+%   dy = (dataperfly(fly).y(i(i0:i1)+1) - dataperfly(fly).y(i(i0:i1)-1))/2;
+%   if i(1) == 1,
+%     dx = [dataperfly(fly).x(2)-dataperfly(fly).x(1),dx];
+%     dy = [dataperfly(fly).y(2)-dataperfly(fly).y(1),dy];
+%   end
+%   if i(end) == dataperfly(fly).nframes,
+%     dx = [dx,dataperfly(fly).x(end)-dataperfly(fly).x(end-1)];
+%     dy = [dy,dataperfly(fly).y(end)-dataperfly(fly).y(end-1)];
+%   end
+%   v = sqrt(dx.^2+dy.^2);
+%   velang = atan2(dy,dx);
+%   err = abs(modrange(velang-dataperfly(fly).theta(i),-pi,pi));
+%   isreverse = (v >= MINWALKVEL) & (err > MINANGLEDIFF);
+%   if ~any(isreverse), 
+%     seqs(s).type = ['dummy', seqs(s).type];;
+%     seqs(s).suspiciousness = 0;
+%   else
+%     i0 = find(isreverse,1);
+%     i1 = find(isreverse,1,'last');
+%     seqs(s).suspiciousness = err(i0:i1)-MINANGLEDIFF;
+%     seqs(s).frames = dataperfly(fly).firstframe+i(i0:i1)-1;
+%   end
 end
 
 params = {'minerrjumpfrac',MINERRJUMPFRAC,'closelength',CLOSELENGTH,...

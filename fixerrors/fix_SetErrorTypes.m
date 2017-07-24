@@ -1,4 +1,4 @@
-function SetErrorTypes(handles)
+function fix_SetErrorTypes(handles)
 % set "next error type" menu values based on remaining suspicious sequences
 % splintered from fixerrorsgui 6/23/12 JAB
 
@@ -8,10 +8,9 @@ isorientchange = false; isorientvelmismatch = false;
 islargemajor = false; istouch = false;
 isuser = false;
 for i = 1:length(handles.seqs),
-  if ~isempty( strfindi(handles.seqs(i).type,'dummy') ),
-    continue;
+  if handles.seqs(i).status==SeqStatus.UNKNOWN
+    eval(sprintf('is%s = true;',handles.seqs(i).type));
   end
-  eval(sprintf('is%s = true;',handles.seqs(i).type));
 end
 s = {};
 if isbirth,

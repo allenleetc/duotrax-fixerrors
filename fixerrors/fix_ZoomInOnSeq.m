@@ -6,19 +6,19 @@ if strcmpi(handles.zoommode,'whole arena'),
   return;
 end
 
-if exist('seq','var'),
-  handles.seq = seq;
+if exist('seq','var')==0
+  seq = handles.seqs(handles.seqi);
 end
 
 BORDER = round(min(handles.nr,handles.nc)/30);
 
-frames = max(min(handles.seq.frames)-10,1):max(handles.seq.frames)+10;
-nfliesseq = length(handles.seq.flies);
+frames = max(min(seq.frames)-10,1):max(seq.frames)+10;
+nfliesseq = length(seq.flies);
 nframesseq = length(frames);
 x0 = nan(nfliesseq,nframesseq);
 x1 = x0; y0 = x0; y1 = x0; 
 for flyi = 1:nfliesseq,
-  fly = handles.seq.flies(flyi);
+  fly = seq.flies(flyi);
   for fi = 1:nframesseq,
     f = frames(fi);
     i = handles.trx(fly).off+(f);
