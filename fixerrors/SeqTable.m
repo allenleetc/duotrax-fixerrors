@@ -6,6 +6,16 @@ classdef SeqTable < handle
     cbkSelectSeq
   end
   
+  properties (Dependent)
+    nRows
+  end
+  
+  methods
+    function v = get.nRows(obj)
+      v = size(obj.jtable.Data,1);
+    end
+  end
+  
   methods
     function obj = SeqTable(hParent,pos,posunits,cbk)
       obj.hParent = hParent;
@@ -17,6 +27,7 @@ classdef SeqTable < handle
         'Editable','off');
       jt.Units = posunits;
       jt.Position = pos;
+      jt.Units = 'normalized'; % so will confirm to parent
       jt.MouseClickedCallback = @(src,evt)obj.cbkClick(src,evt);
       obj.jtable = jt;
       obj.cbkSelectSeq = cbk;

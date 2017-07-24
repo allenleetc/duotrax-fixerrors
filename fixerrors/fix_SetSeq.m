@@ -2,6 +2,10 @@ function handles = fix_SetSeq(handles,seqi,isfirstframe)
 % set the GUI state for displaying a particular sequence index
 % splintered from fixerrorsgui 6/23/12 JAB
 
+if exist('isfirstframe','var')==0
+  isfirstframe = false;
+end
+
 handles.seqi = seqi;
 seq = handles.seqs(seqi);
 handles.f = seq.frames(1);
@@ -12,6 +16,12 @@ set(handles.seqframestext,'string',sprintf('Frames: %d:%d',seq.frames(1),seq.fra
 set(handles.seqfliestext,'string',['Flies: [',num2str(seq.flies),']']);
 set(handles.seqtypetext,'string',sprintf('Type: %s',seq.type));
 set(handles.seqsusptext,'string',sprintf('Susp: %f',max(seq.suspiciousness)));
+
+if ~isfirstframe
+  seqTable = handles.seqTable;
+  assert(seqTable.nRows==numel(handles.seqs));
+  seqTable.setSelectedRows(seqi);
+end
 
 % set fly colors so that flies that are close have different colors
 x = nan(1,handles.nflies);
@@ -60,7 +70,7 @@ if isfield(handles,'hpath'),
   end
 end
 
-if nargin < 3 || ~isfirstframe,
+if ~isfirstframe
   fix_SetFrameNumber(handles);
   fix_PlotFrame(handles);
   fix_ZoomInOnSeq(handles);

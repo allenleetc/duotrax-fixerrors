@@ -195,6 +195,8 @@ seqTable = SeqTable(pnlSeq,pos,posunits,cbk);
 seqTable.setSeqData(handles.seqs);
 handles.seqTable = seqTable;
 
+%pnlSeq.Units = 'normalized';
+
 guidata(hObject,handles);
 
 handles = PlotFirstFrame(handles);
@@ -240,7 +242,8 @@ handles.mainaxesaspectratio = 1;
 
 function InitializeFrameSlider(handles)
 
-set(handles.frameslider,'max',handles.nframes,'min',1,'sliderstep',[1,20]/(handles.nframes-1));
+set(handles.frameslider,'max',handles.nframes,'min',1,...
+  'sliderstep',[1,20]/(handles.nframes-1));
 
 
 % --- Outputs from this function are returned to the command line.
@@ -708,6 +711,12 @@ guidata(hObject,handles);
 
 fix_Play(handles,handles.playstopbutton);
 
+function gotoseq(handles,iSeq) % updates handles
+nSeq = numel(handles.seqs);
+assert(iSeq>0 && iSeq<=nSeq);
+handles = fix_SetSeq(handles,iSeq);
+guidata(handles.figure1,handles);
+fix_Play(handles,handles.playstopbutton);
 
 % --- Executes on button press in backbutton.
 function backbutton_Callback(hObject, eventdata, handles)
@@ -2650,6 +2659,7 @@ function figure1_ResizeFcn(hObject, eventdata, handles)
 figpos = get(handles.figure1,'Position');
 
 ntags = numel(handles.upperrightpanel_tags);
+upperpanelYlowerlim = inf;
 for fni = 1:ntags
   fn = handles.upperrightpanel_tags{fni};
   h = handles.(fn);
@@ -2657,14 +2667,30 @@ for fni = 1:ntags
   pos(1) = figpos(3) - handles.upperrightpanel_dright(fni);
   pos(2) = figpos(4) - handles.upperrightpanel_dtop(fni);
   set(h,'Position',pos);
+  
+  upperpanelYlowerlim = min(upperpanelYlowerlim,pos(2));
 end
 
 ntags = numel(handles.lowerrightpanel_tags);
+lowerpanelYupperlim = -inf;
 for fni = 1:ntags
   fn = handles.lowerrightpanel_tags{fni};
   h = handles.(fn);
   pos = get(h,'Position');
   pos(1) = figpos(3) - handles.lowerrightpanel_dright(fni);
+  set(h,'Position',pos);
+  
+  lowerpanelYupperlim = max(lowerpanelYupperlim,pos(2)+pos(4));
+end
+
+ntags = numel(handles.midrightpanel_tags);
+for fni = 1:ntags
+  fn = handles.midrightpanel_tags{fni};
+  h = handles.(fn);
+  pos = get(h,'Position');
+  pos(1) = figpos(3) - handles.midrightpanel_dright(fni);
+  pos(2) = lowerpanelYupperlim + 5;
+  pos(4) = upperpanelYlowerlim - lowerpanelYupperlim - 10;
   set(h,'Position',pos);
 end
 
@@ -2787,7 +2813,8 @@ else
 end
 
 function cbkSelectSeq(pnlSeq,irow)
-disp('TODO: cbkSelectSeq');
+handles = guidata(pnlSeq);
+gotoseq(handles,irow); % updates handles
 
 function s = lclGetPUMContents(h)
 contents = get(h,'string');

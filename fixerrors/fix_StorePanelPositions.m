@@ -16,6 +16,18 @@ for fni = 1:ntags
   handles.upperrightpanel_dtop(fni) = figpos(4)-pos(2);
 end
 
+% midright panels will stretch from upperlimit of lower-right panels to 
+% lowerlimit of upper-right panels
+handles.midrightpanel_tags = {'pnlSequences'};
+ntags = numel(handles.midrightpanel_tags);
+handles.midrightpanel_dright = nan(1,ntags);
+for fni = 1:ntags
+  fn = handles.midrightpanel_tags{fni};
+  h = handles.(fn);
+  pos = get(h,'Position');
+  handles.midrightpanel_dright(fni) = figpos(3)-pos(1);
+end
+
 handles.lowerrightpanel_tags = {'navigationpanel'};
 ntags = numel(handles.lowerrightpanel_tags);
 handles.lowerrightpanel_dright = nan(1,ntags);
