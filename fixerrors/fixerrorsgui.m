@@ -113,8 +113,8 @@ handles = InitializeMainAxes(handles);
 
 % initialize state
 isseqleft = false;
-for i = 1:length(handles.seqs),
-  if handles.seqs(i).status==SeqStatus.UNKNOWN
+for iseq = 1:length(handles.seqs),
+  if handles.seqs(iseq).status==SeqStatus.UNKNOWN
     isseqleft = true;
     break;
   end
@@ -132,7 +132,7 @@ handles.flipud = 0;
 handles.show_dead = 0;
 handles.nflies = length(handles.trx);
 handles = fix_SetFlyColors(handles);
-handles = fix_SetSeq(handles,i,true);
+handles = fix_SetSeq(handles,iseq,true);
 handles.nselect = 0;
 handles.selected = [];
 handles.motionobj = [];
@@ -140,6 +140,7 @@ handles.plotpath = 'All Flies';
 handles.nframesplot = 101;
 handles.zoommode = 'Whole Arena';
 handles.needssaving = 0;
+handles.isplaying = false;
 handles.MaxFPS = 40;
 handles.MinSPF = 1/handles.MaxFPS;
 
@@ -209,12 +210,11 @@ InitializeKeyPressFcns(handles);
 
 set(handles.editmenu,'Value',2); % swap
 
+handles = fix_SetSeq(handles,iseq,false); % repeat to set seqTable selected row
 
-% Update handles structure
 guidata(hObject, handles);
 
-
-fix_Play(handles,handles.playstopbutton);
+playstopbutton_Callback(handles.playstopbutton,[],handles);
 
 % UIWAIT makes fixerrorsgui wait for user response (see UIRESUME)
 %AL
@@ -307,7 +307,7 @@ for fly = 1:handles.nflies,
     handles.htailmarker(fly),handles.hpath(fly)] = ...
     InitFly(handles.colors(fly,:));
   handles = fix_UpdateFlyPathVisible(handles);
-  handles = fix_FixUpdateFly(handles,fly);
+  fix_FixUpdateFly(handles,fly);
 end
 
 fix_ZoomInOnSeq(handles);
@@ -709,14 +709,14 @@ end
 
 guidata(hObject,handles);
 
-fix_Play(handles,handles.playstopbutton);
+playstopbutton_Callback(handles.playstopbutton,[],handles);
 
 function gotoseq(handles,iSeq) % updates handles
 nSeq = numel(handles.seqs);
 assert(iSeq>0 && iSeq<=nSeq);
 handles = fix_SetSeq(handles,iSeq);
 guidata(handles.figure1,handles);
-fix_Play(handles,handles.playstopbutton);
+playstopbutton_Callback(handles.playstopbutton,[],handles);
 
 % --- Executes on button press in backbutton.
 function backbutton_Callback(hObject, eventdata, handles)
@@ -1011,7 +1011,7 @@ for ui = top:-1:1
       i = handles.trx(fly).off+(f);
       handles.trx(fly).theta(i) = modrange(handles.trx(fly).theta(i)+pi,-pi,pi);
     end
-    handles = fix_FixUpdateFly(handles,fly);
+    fix_FixUpdateFly(handles,fly);
     
     tfUndoOccurred = true;
     break;
@@ -1951,23 +1951,6 @@ set(handles.hconnect,'color',color*.75,'linewidth',3,'linestyle','--',...
 
 guidata(hObject,handles);
 
-
-function playstopbutton_Callback(hObject, eventdata, handles)
-if strcmpi(get(hObject,'string'),'play seq')
-  fix_Play(handles,hObject);
-else
-  handles.isplaying = false;
-  guidata(hObject,handles);
-end
-
-function playstopbuttonslow_Callback(hObject, eventdata, handles)
-if strcmpi(get(hObject,'string'),'play seq slow')
-  fix_Play(handles,hObject,'speedfacseq',0.5);
-else
-  handles.isplaying = false;
-  guidata(hObject,handles);
-end
-
 % --- Executes on button press in extenddoitbutton.
 function extenddoitbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to extenddoitbutton (see GCBO)
@@ -2517,7 +2500,7 @@ handles = fix_SetFlyColors(handles);
    handles.htailmarker(fly),handles.hpath(fly)] = ...
    InitFly(handles.colors(fly,:));
 handles = fix_UpdateFlyPathVisible(handles);
-handles = fix_FixUpdateFly(handles,fly);
+fix_FixUpdateFly(handles,fly);
 
 set(handles.addnewtrackdoitbutton,'Enable','off');
 set(handles.addnewtrackpanel','visible','off');
@@ -2767,7 +2750,6 @@ handles.show_dead = get( hObject, 'value' );
 fix_PlotFrame( handles )
 guidata( hObject, handles )
 
-
 function pbSeqStart_Callback(hObject, eventdata, handles)
 SEQDF = 20;
 seq = handles.seqs(handles.seqi);
@@ -2784,32 +2766,107 @@ f1 = min(handles.nframes,seq.frames(end)+SEQDF);
 lclSetFrame(handles,f1);
 
 function pbPlay_Callback(hObject, eventdata, handles)
-if strcmpi(get(hObject,'string'),'>')
-  fix_Play(handles,hObject,'speedfac',0.5,'speedfacseq',0.5);
-else
-  handles.isplaying = false;
-  guidata(hObject,handles);
-end
+play(hObject,handles,handles.f,handles.nframes,[],...
+  'speedfac',0.35,'speedfacseq',0.35);
 function pbPlayFast_Callback(hObject, eventdata, handles)
-if strcmpi(get(hObject,'string'),'>>')
-  fix_Play(handles,hObject,'speedfac',inf,'speedfacseq',0.4);
-else
-  handles.isplaying = false;
-  guidata(hObject,handles);
-end
+play(hObject,handles,handles.f,handles.nframes,[],...
+  'speedfac',inf,'speedfacseq',0.5);
 function pbBack_Callback(hObject, eventdata, handles)
-if strcmpi(get(hObject,'string'),'<')
-  fix_Play(handles,hObject,'speedfac',0.5,'speedfacseq',0.5,'playdir',-1);
-else
-  handles.isplaying = false;
-  guidata(hObject,handles);
-end
+play(hObject,handles,handles.f,1,[],'speedfac',0.35,'speedfacseq',0.35);
 function pbBackFast_Callback(hObject, eventdata, handles)
-if strcmpi(get(hObject,'string'),'<<')
-  fix_Play(handles,hObject,'speedfac',inf,'speedfacseq',0.4,'playdir',-1);
-else
-  handles.isplaying = false;
+play(hObject,handles,handles.f,1,[],'speedfac',inf,'speedfacseq',0.5);
+function playstopbutton_Callback(hObject, eventdata, handles)
+seq = handles.seqs(handles.seqi);
+f1 = max(1,seq.frames(1)-10);
+f2 = min(handles.nframes,seq.frames(end)+10);
+fend = handles.f;
+play(hObject,handles,f1,f2,fend);
+function playstopbuttonslow_Callback(hObject, eventdata, handles)
+seq = handles.seqs(handles.seqi);
+f1 = max(1,seq.frames(1)-10);
+f2 = min(handles.nframes,seq.frames(end)+10);
+fend = handles.f;
+play(hObject,handles,f1,f2,fend,'speedfacseq',0.35);
+
+function play(hObject,handles,f1,f2,fend,varargin)
+% * Call once to start; call again to stop
+% * Should be ctrl-c "safe"
+%
+% f1: start frame
+% f2: finish frame. If earlier than f1 then play backwards
+% fend: (optional) reset to this frame after playback. If [], then don't
+% reset.
+
+oc = onCleanup(@()playcleanup(hObject,handles));
+if ~handles.isplaying
+  hObject.UserData = struct('String',hObject.String,...
+    'BackgroundColor',hObject.BackgroundColor);
+  set(hObject,'String','Stop','BackgroundColor',[.5,0,0]);
+  handles.isplaying = true;
   guidata(hObject,handles);
+  playcore(hObject,handles,f1,f2,fend,varargin{:});
+end
+function playcleanup(hObject,handles)
+% Gets called twice at a "stop" but that's fine
+handles.isplaying = false;
+% playcore does not update guidata, to avoid collisions with stop; read
+% current frame from controls to update handles.f
+handles.f = str2double(handles.frameedit.String); 
+guidata(hObject,handles);
+fix_SetFrameNumber(handles);
+fix_PlotFrame(handles);
+ud = hObject.UserData;
+set(hObject,'String',ud.String,'BackgroundColor',ud.BackgroundColor);
+
+function playcore(hObject,handles,f1,f2,fend,varargin)
+% No modifications to guidata.
+
+[speedfac,speedfacseq] = myparse(varargin,...
+  'speedfac',1.0,...
+  'speedfacseq',1.0);
+
+if f1<=f2
+  frmsPlay = f1:f2;
+else
+  frmsPlay = f1:-1:f2;
+end
+tfReset = ~isempty(fend);
+
+maxnonseq = isinf(speedfac);
+minSPF = handles.MinSPF/speedfac;
+minSPFseq = handles.MinSPF/speedfacseq;
+tic;
+for f = frmsPlay
+  handles = guidata(hObject);
+  if ~handles.isplaying
+    break;
+  end  
+  
+  handles.f = f;
+  fix_SetFrameNumber(handles);
+  fix_PlotFrame(handles);
+  % Note, handles.f not updated in guidata
+  drawnow;
+
+  if handles.frmIsSeq(f)
+    dtFrm = toc;
+    pauseTime = minSPFseq - dtFrm; % could be negative
+  elseif ~maxnonseq
+    dtFrm = toc;
+    pauseTime = minSPF - dtFrm; % etc
+  else
+    pauseTime = 0;
+  end
+  if pauseTime>0
+    pause(pauseTime);
+  end
+  tic;
+end
+
+if handles.isplaying && tfReset % don''t reset if stopped/canceled
+  handles.f = fend;
+  fix_SetFrameNumber(handles);
+  fix_PlotFrame(handles);
 end
 
 function cbkSelectSeq(pnlSeq,irow)

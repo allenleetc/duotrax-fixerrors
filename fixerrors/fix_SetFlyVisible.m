@@ -1,4 +1,4 @@
-function SetFlyVisible(handles,fly,v)
+function fix_SetFlyVisible(handles,fly,v)
 % makes fly body visible or invisible
 % splintered from fixerrorsgui 6/21/12 JAB
 
