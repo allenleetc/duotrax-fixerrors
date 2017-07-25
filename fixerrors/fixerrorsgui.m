@@ -10,24 +10,22 @@ function varargout = fixerrorsgui(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @fixerrorsgui_OpeningFcn, ...
-                   'gui_OutputFcn',  @fixerrorsgui_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+  'gui_Singleton',  gui_Singleton, ...
+  'gui_OpeningFcn', @fixerrorsgui_OpeningFcn, ...
+  'gui_OutputFcn',  @fixerrorsgui_OutputFcn, ...
+  'gui_LayoutFcn',  [] , ...
+  'gui_Callback',   []);
 if nargin && ischar(varargin{1})
-    gui_State.gui_Callback = str2func(varargin{1});
+  gui_State.gui_Callback = str2func(varargin{1});
 end
 
 if nargout
-    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+  [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
 else
-    gui_mainfcn(gui_State, varargin{:});
+  gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
 
-
-% --- Executes just before fixerrorsgui is made visible.
 function fixerrorsgui_OpeningFcn(hObject, eventdata, handles, varargin)
 
 handles.output = hObject;
@@ -39,26 +37,26 @@ handles.trx = varargin{3};
 handles.annname = varargin{4};
 handles.params = varargin{5};
 handles.matname = varargin{6};
-if length(varargin) > 6,
+if length(varargin) > 6
   handles.savename = varargin{7};
   didload = false;
 else
   didload = false;
 end
-if length( varargin ) > 7
-   readframe_fcn = varargin{8};
-   handles.readframe = readframe_fcn.readframe;
-   handles.nframes = readframe_fcn.nframes;
-   handles.fid = readframe_fcn.fid;
+if length(varargin) > 7
+  readframe_fcn = varargin{8};
+  handles.readframe = readframe_fcn.readframe;
+  handles.nframes = readframe_fcn.nframes;
+  handles.fid = readframe_fcn.fid;
 else
-   [handles.readframe,handles.nframes,handles.fid] = get_readframe_fcn(handles.moviename);
+  [handles.readframe,handles.nframes,handles.fid] = get_readframe_fcn(handles.moviename);
 end
-if length( varargin ) > 8
-   handles.circular_arena = varargin{9};
+if length(varargin) > 8
+  handles.circular_arena = varargin{9};
 else
-   handles.circular_arena = struct( 'do_set_circular_arena', 0 );
+  handles.circular_arena = struct( 'do_set_circular_arena', 0 );
 end
-if length( varargin ) > 9
+if length(varargin) > 9
   handles.undolist = varargin{10};
 else
   handles.undolist = {};
@@ -72,34 +70,34 @@ if isfield(handles.trx,'timestamps'),
     t0 = handles.trx(i).firstframe;
     t1 = handles.trx(i).endframe;
     if isempty( handles.trx(i).timestamps ) && ~isempty( t0 )
-       handles.timestamps(t0:t1) = (t0:t1)/handles.trx(i).fps;
-    else       
-       if length( handles.timestamps ) >= t1 & ...
-             any(~isnan(handles.timestamps(t0:t1)) & ...
-             (handles.trx(i).timestamps ~= handles.timestamps(t0:t1))),
-         error('Timestamps don''t match for fly %d',i);
-       end
-       handles.timestamps(t0:t1) = handles.trx(i).timestamps;
+      handles.timestamps(t0:t1) = (t0:t1)/handles.trx(i).fps;
+    else
+      if length( handles.timestamps ) >= t1 & ...
+          any(~isnan(handles.timestamps(t0:t1)) & ...
+          (handles.trx(i).timestamps ~= handles.timestamps(t0:t1))),
+        error('Timestamps don''t match for fly %d',i);
+      end
+      handles.timestamps(t0:t1) = handles.trx(i).timestamps;
     end
   end
   % interpolate where there are still NaNs
   nan_ind = find( isnan( handles.timestamps ) );
   if ~isempty( nan_ind ) && length( nan_ind ) ~= length( handles.timestamps )
-     t0 = nan_ind(1);
-     t1 = nan_ind(1);
-     for f = 2:length( nan_ind )
-        if nan_ind(f) ~= t0 + 1 % not consecutive
-           t1 = nan_ind(f - 1);
-           v = (1:(t1 - t0 + 1))/handles.trx(1).fps;
-           handles.timestamps(t0:t1) = handles.timestamps(t1 + 1) - v(end:-1:1);
-           t0 = nan_ind(f);
-        end
-     end
-     if t1 <= t0
-        t1 = nan_ind(end);
+    t0 = nan_ind(1);
+    t1 = nan_ind(1);
+    for f = 2:length( nan_ind )
+      if nan_ind(f) ~= t0 + 1 % not consecutive
+        t1 = nan_ind(f - 1);
         v = (1:(t1 - t0 + 1))/handles.trx(1).fps;
-        handles.timestamps(t0:t1) = handles.timestamps(t0 - 1) + v;
-     end
+        handles.timestamps(t0:t1) = handles.timestamps(t1 + 1) - v(end:-1:1);
+        t0 = nan_ind(f);
+      end
+    end
+    if t1 <= t0
+      t1 = nan_ind(end);
+      v = (1:(t1 - t0 + 1))/handles.trx(1).fps;
+      handles.timestamps(t0:t1) = handles.timestamps(t0 - 1) + v;
+    end
   end
 end
 
@@ -204,7 +202,7 @@ handles = PlotFirstFrame(handles);
 %InitializeDisplayPanel(handles);
 fix_SetErrorTypes(handles);
 if ~isempty(handles.bgmed)
-   handles.bgmed = reshape(handles.bgmed,[handles.nc,handles.nr])';
+  handles.bgmed = reshape(handles.bgmed,[handles.nc,handles.nr])';
 end
 InitializeKeyPressFcns(handles);
 
@@ -247,7 +245,7 @@ set(handles.frameslider,'max',handles.nframes,'min',1,...
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = fixerrorsgui_OutputFcn(hObject, eventdata, handles) 
+function varargout = fixerrorsgui_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -281,15 +279,15 @@ colormap gray; axis image; hold on;
 zoom reset;
 
 switch class(im),
-    case 'uint8',
-        maxv = 255;
-    case 'uint16',
-        maxv = 2^16-1;
-    otherwise
-        maxv = max(im(:));
-        if maxv <= 1,
-            maxv = 1;
-        end
+  case 'uint8',
+    maxv = 255;
+  case 'uint16',
+    maxv = 2^16-1;
+  otherwise
+    maxv = max(im(:));
+    if maxv <= 1,
+      maxv = 1;
+    end
 end
 set(handles.mainaxes,'Clim',[0,maxv]);
 
@@ -663,7 +661,7 @@ susp = [];
 idx = [];
 
 % find an error of type nexttype
-for i = 1:length(handles.seqs)  
+for i = 1:length(handles.seqs)
   if strcmpi(handles.seqs(i).type,nexttype) && handles.seqs(i).status==SeqStatus.UNKNOWN
     % store frames, flies, suspiciousness for this seq
     if strcmpi(nexttype,'swap') || strcmpi(nexttype,'touch') || strcmpi(nexttype,'user')
@@ -678,7 +676,7 @@ for i = 1:length(handles.seqs)
 end
 
 if isempty(flies)
-  keyboard; 
+  keyboard;
 end
 
 % choose error of this type if there are more than one
@@ -691,7 +689,7 @@ elseif strcmpi(sortby,'frame number')
   handles = fix_SetSeq(handles,idx(j));
 elseif strcmpi(sortby,'fly')
   seq = handles.seqs(handles.seqi);
-  if strcmpi(seq.type,'swap') || strcmpi(seq.type,'touch') 
+  if strcmpi(seq.type,'swap') || strcmpi(seq.type,'touch')
     currfly = seq.flies(1)*handles.nflies + seq.flies(2);
   else
     currfly = seq.flies;
@@ -783,7 +781,7 @@ assert(false);
 %             end
 %          end
 %       end
-% 
+%
 %       % update GUI to old sequence
 %       handles = fix_SetSeq( handles, handles.seqi );
 %       fix_SetErrorTypes( handles );
@@ -807,7 +805,7 @@ assert(false);
 %          end
 %       end
 %       guidata( hObject, handles );
-% 
+%
 %       fix_Play( handles, hObject );
 %       break
 %    end % found a sequence in undo list that was marked 'correct'
@@ -864,7 +862,7 @@ trxfname = fullfile(path,trxfname);
 diagfname = fullfile(path,sprintf('fixerrors_%s.mat',nowstr));
 
 fprintf(1,'Saving fixed trxfile: %s.\n',trxfname);
-trx = handles.trx; 
+trx = handles.trx;
 fldsRm = intersect(fieldnames(trx),Fix.FLDS_RM);
 trx = rmfield(trx,fldsRm); %#ok<NASGU>
 save(trxfname,'trx');
@@ -898,41 +896,41 @@ top = length(handles.undolist);
 tfUndoOccurred = false;
 for ui = top:-1:1
   action = handles.undolist{ui}{1};
-  switch action 
+  switch action
     case 'delete'
       assert(false);
-%       fprintf( 1, 'undoing deletion item %d\n', ui );
-%       f = handles.undolist{ui}{2};
-%       fly = handles.undolist{ui}{3};
-%       trk = handles.undolist{ui}{4};
-%       fly_seqs = handles.undolist{ui}{5};
-%       
-%       if isdummytrk( handles.trx(fly) )
-%          handles.trx(fly) = trk;
-%          [handles.hellipse(fly), handles.hcenter(fly), handles.hhead(fly),...
-%             handles.htail(fly), handles.hleft(fly), handles.hright(fly),...
-%             handles.htailmarker(fly), handles.hpath(fly)] = ...
-%             InitFly( handles.colors(fly,:) );
-%          handles = fix_UpdateFlyPathVisible( handles );
-%       else
-%          handles.trx(fly) = fix_CatTracks( handles.trx(fly), trk );
-%       end
-%       
-%       for si = fly_seqs
-%          assert( ~isempty( strfindi( handles.seqs(si).type, 'dummy' ) ) );
-%          handles.seqs(si).type = handles.seqs(si).type(length( 'dummy' ) + 1:end);
-%       end
-%       
-%       handles = fix_FixUpdateFly( handles, fly );
-%       handles = fix_FixBirthEvent( handles, fly );
-%       handles = fix_FixDeathEvent( handles, fly );
+      %       fprintf( 1, 'undoing deletion item %d\n', ui );
+      %       f = handles.undolist{ui}{2};
+      %       fly = handles.undolist{ui}{3};
+      %       trk = handles.undolist{ui}{4};
+      %       fly_seqs = handles.undolist{ui}{5};
+      %
+      %       if isdummytrk( handles.trx(fly) )
+      %          handles.trx(fly) = trk;
+      %          [handles.hellipse(fly), handles.hcenter(fly), handles.hhead(fly),...
+      %             handles.htail(fly), handles.hleft(fly), handles.hright(fly),...
+      %             handles.htailmarker(fly), handles.hpath(fly)] = ...
+      %             InitFly( handles.colors(fly,:) );
+      %          handles = fix_UpdateFlyPathVisible( handles );
+      %       else
+      %          handles.trx(fly) = fix_CatTracks( handles.trx(fly), trk );
+      %       end
+      %
+      %       for si = fly_seqs
+      %          assert( ~isempty( strfindi( handles.seqs(si).type, 'dummy' ) ) );
+      %          handles.seqs(si).type = handles.seqs(si).type(length( 'dummy' ) + 1:end);
+      %       end
+      %
+      %       handles = fix_FixUpdateFly( handles, fly );
+      %       handles = fix_FixBirthEvent( handles, fly );
+      %       handles = fix_FixDeathEvent( handles, fly );
     case 'swap'
       fprintf(1,'undoing swap item %d\n',ui);
       f = handles.undolist{ui}{2};
       fly1 = handles.undolist{ui}{3}(1);
       fly2 = handles.undolist{ui}{3}(2);
       handles = fix_SwapIdentities( handles, f, fly1, fly2 );
-
+      
       fix_SetFlySelected(handles,fly1,false);
       fix_SetFlySelected(handles,fly2,false);
       
@@ -940,118 +938,118 @@ for ui = top:-1:1
       break;
     case {'interpolate' 'autotrack'}
       assert(false);
-%       fprintf( 1, 'undoing interpolation/autotracking item %d\n', ui );
-%       if length( handles.undolist{ui} ) == 4
-%          f0 = handles.undolist{ui}{2}(1);
-%          f1 = handles.undolist{ui}{2}(2);
-%          fly = handles.undolist{ui}{3};
-%          trk = handles.undolist{ui}{4};
-% 
-%          t0 = fix_GetPartOfTrack( handles.trx(fly), 1, f0 - 1 );
-%          t2 = fix_GetPartOfTrack( handles.trx(fly), f1 + 1, inf );
-%          handles.trx(fly) = fix_CatTracks( fix_CatTracks( t0, trk ), t2 );
-% 
-%       else
-%          firstframe = handles.undolist{ui}{2}(1);
-%          endframe = handles.undolist{ui}{2}(2);
-%          fly = handles.undolist{ui}{3};
-%          
-%          handles.trx(fly) = fix_GetPartOfTrack( handles.trx(fly), firstframe, endframe );
-%          
-%          handles = fix_FixDeathEvent( handles, fly );
-%       end
-%       
-%       handles = fix_FixUpdateFly( handles, fly );
+      %       fprintf( 1, 'undoing interpolation/autotracking item %d\n', ui );
+      %       if length( handles.undolist{ui} ) == 4
+      %          f0 = handles.undolist{ui}{2}(1);
+      %          f1 = handles.undolist{ui}{2}(2);
+      %          fly = handles.undolist{ui}{3};
+      %          trk = handles.undolist{ui}{4};
+      %
+      %          t0 = fix_GetPartOfTrack( handles.trx(fly), 1, f0 - 1 );
+      %          t2 = fix_GetPartOfTrack( handles.trx(fly), f1 + 1, inf );
+      %          handles.trx(fly) = fix_CatTracks( fix_CatTracks( t0, trk ), t2 );
+      %
+      %       else
+      %          firstframe = handles.undolist{ui}{2}(1);
+      %          endframe = handles.undolist{ui}{2}(2);
+      %          fly = handles.undolist{ui}{3};
+      %
+      %          handles.trx(fly) = fix_GetPartOfTrack( handles.trx(fly), firstframe, endframe );
+      %
+      %          handles = fix_FixDeathEvent( handles, fly );
+      %       end
+      %
+      %       handles = fix_FixUpdateFly( handles, fly );
     case 'connect'
       assert(false);
-%       fprintf( 1, 'undoing connection item %d\n', ui );
-%       
-%       f1 = handles.undolist{ui}{2}(1);
-%       f2 = handles.undolist{ui}{2}(2);
-%       fly1 = handles.undolist{ui}{3}(1);
-%       fly2 = handles.undolist{ui}{3}(2);
-%       trk1 = handles.undolist{ui}{4}(1);
-%       trk2 = handles.undolist{ui}{4}(2);
-%       seqs_removed1 = handles.undolist{ui}{5};
-%       seqs_removed2 = handles.undolist{ui}{6};
-% 
-%       first_trk1 = fix_GetPartOfTrack( handles.trx(fly1), 1, f1 );
-%       last_trk2 = fix_GetPartOfTrack( handles.trx(fly1), f2, inf );
-% 
-%       handles.trx(fly1) = fix_CatTracks( first_trk1, trk1 );
-%       handles = fix_FixUpdateFly( handles, fly1 );
-%       handles = fix_FixDeathEvent( handles, fly1 );
-%       for si = seqs_removed1
-%          assert( ~isempty( strfindi( handles.seqs(si).type, 'dummy' ) ) );
-%          handles.seqs(si).type = handles.seqs(si).type(length( 'dummy' ) + 1:end);
-%       end
-% 
-%       handles.trx(fly2) = fix_CatTracks( trk2, last_trk2 );
-%       [handles.hellipse(fly2), handles.hcenter(fly2), handles.hhead(fly2), ...
-%          handles.htail(fly2), handles.hleft(fly2), handles.hright(fly2), ...
-%          handles.htailmarker(fly2), handles.hpath(fly2)] = ...
-%          InitFly( handles.colors(fly2,:) );
-%       handles = fix_UpdateFlyPathVisible( handles );
-%       handles = fix_FixUpdateFly( handles, fly2 );
-%       handles = fix_FixBirthEvent( handles, fly2 );
-%       handles = fix_FixDeathEvent( handles, fly2 );
-%       for si = seqs_removed2
-%          assert( ~isempty( strfindi( handles.seqs(si).type, 'dummy' ) ) );
-%          handles.seqs(si).type = handles.seqs(si).type(length( 'dummy' ) + 1:end);
-%       end
-
-  case 'flip'
-    fprintf( 1, 'undoing flip item %d\n', ui );
-    frame = handles.undolist{ui}{2};
-    f = handles.undolist{ui}{3};
-    fly = handles.undolist{ui}{4};
-    
-    fix_SetFlySelected(handles,fly,false);
-    for f = frame:f
-      i = handles.trx(fly).off+(f);
-      handles.trx(fly).theta(i) = modrange(handles.trx(fly).theta(i)+pi,-pi,pi);
-    end
-    fix_FixUpdateFly(handles,fly);
-    
-    tfUndoOccurred = true;
-    break;
-  case 'manytrack'
-    assert(false);
-%       f0 = handles.undolist{ui}{2}(1);
-%       f1 = handles.undolist{ui}{2}(2);
-%       flies = handles.undolist{ui}{3};
-%       oldtrx = handles.undolist{ui}{4};
-% 
-%       for fi = 1:length( flies )
-%          fly = flies(fi);
-%          t0 = fix_GetPartOfTrack( handles.trx(fly), 1, f0 - 1 );
-%          t2 = fix_GetPartOfTrack( handles.trx(fly), f1 + 1, inf );
-%          handles.trx(fly) = fix_CatTracks( fix_CatTracks( t0, oldtrx(fi) ), t2 );
-%       end
-%          
-%       for fly = flies
-%          handles = fix_FixUpdateFly( handles, fly );
-%       end
-
+      %       fprintf( 1, 'undoing connection item %d\n', ui );
+      %
+      %       f1 = handles.undolist{ui}{2}(1);
+      %       f2 = handles.undolist{ui}{2}(2);
+      %       fly1 = handles.undolist{ui}{3}(1);
+      %       fly2 = handles.undolist{ui}{3}(2);
+      %       trk1 = handles.undolist{ui}{4}(1);
+      %       trk2 = handles.undolist{ui}{4}(2);
+      %       seqs_removed1 = handles.undolist{ui}{5};
+      %       seqs_removed2 = handles.undolist{ui}{6};
+      %
+      %       first_trk1 = fix_GetPartOfTrack( handles.trx(fly1), 1, f1 );
+      %       last_trk2 = fix_GetPartOfTrack( handles.trx(fly1), f2, inf );
+      %
+      %       handles.trx(fly1) = fix_CatTracks( first_trk1, trk1 );
+      %       handles = fix_FixUpdateFly( handles, fly1 );
+      %       handles = fix_FixDeathEvent( handles, fly1 );
+      %       for si = seqs_removed1
+      %          assert( ~isempty( strfindi( handles.seqs(si).type, 'dummy' ) ) );
+      %          handles.seqs(si).type = handles.seqs(si).type(length( 'dummy' ) + 1:end);
+      %       end
+      %
+      %       handles.trx(fly2) = fix_CatTracks( trk2, last_trk2 );
+      %       [handles.hellipse(fly2), handles.hcenter(fly2), handles.hhead(fly2), ...
+      %          handles.htail(fly2), handles.hleft(fly2), handles.hright(fly2), ...
+      %          handles.htailmarker(fly2), handles.hpath(fly2)] = ...
+      %          InitFly( handles.colors(fly2,:) );
+      %       handles = fix_UpdateFlyPathVisible( handles );
+      %       handles = fix_FixUpdateFly( handles, fly2 );
+      %       handles = fix_FixBirthEvent( handles, fly2 );
+      %       handles = fix_FixDeathEvent( handles, fly2 );
+      %       for si = seqs_removed2
+      %          assert( ~isempty( strfindi( handles.seqs(si).type, 'dummy' ) ) );
+      %          handles.seqs(si).type = handles.seqs(si).type(length( 'dummy' ) + 1:end);
+      %       end
+      
+    case 'flip'
+      fprintf( 1, 'undoing flip item %d\n', ui );
+      frame = handles.undolist{ui}{2};
+      f = handles.undolist{ui}{3};
+      fly = handles.undolist{ui}{4};
+      
+      fix_SetFlySelected(handles,fly,false);
+      for f = frame:f
+        i = handles.trx(fly).off+(f);
+        handles.trx(fly).theta(i) = modrange(handles.trx(fly).theta(i)+pi,-pi,pi);
+      end
+      fix_FixUpdateFly(handles,fly);
+      
+      tfUndoOccurred = true;
+      break;
+    case 'manytrack'
+      assert(false);
+      %       f0 = handles.undolist{ui}{2}(1);
+      %       f1 = handles.undolist{ui}{2}(2);
+      %       flies = handles.undolist{ui}{3};
+      %       oldtrx = handles.undolist{ui}{4};
+      %
+      %       for fi = 1:length( flies )
+      %          fly = flies(fi);
+      %          t0 = fix_GetPartOfTrack( handles.trx(fly), 1, f0 - 1 );
+      %          t2 = fix_GetPartOfTrack( handles.trx(fly), f1 + 1, inf );
+      %          handles.trx(fly) = fix_CatTracks( fix_CatTracks( t0, oldtrx(fi) ), t2 );
+      %       end
+      %
+      %       for fly = flies
+      %          handles = fix_FixUpdateFly( handles, fly );
+      %       end
+      
     case 'addnew'
       assert(false);
       
-%       fprintf( 1, 'undoing addnewtrack item %d\n', ui );
-%       fly = handles.undolist{ui}{2};
-%       fix_DeleteFly( handles, fly );
+      %       fprintf( 1, 'undoing addnewtrack item %d\n', ui );
+      %       fly = handles.undolist{ui}{2};
+      %       fix_DeleteFly( handles, fly );
     case 'superpose'
       assert(false);
-%       fprintf( 1, 'undoing superposetrack item %d\n', ui )    
-%       fly = handles.undolist{ui}{2};
-%       f0 = handles.undolist{ui}{3};
-%       f1 = handles.undolist{ui}{4};
-%       trk = handles.undolist{ui}{5};
-% 
-%       t0 = fix_GetPartOfTrack( handles.trx(fly), 1, f0 - 1 );
-%       t2 = fix_GetPartOfTrack( handles.trx(fly), f1 + 1, inf );
-%       handles.trx(fly) = fix_CatTracks( fix_CatTracks( t0, trk ), t2 );
-% 
-%       fix_FixUpdateFly( handles, fly );
+      %       fprintf( 1, 'undoing superposetrack item %d\n', ui )
+      %       fly = handles.undolist{ui}{2};
+      %       f0 = handles.undolist{ui}{3};
+      %       f1 = handles.undolist{ui}{4};
+      %       trk = handles.undolist{ui}{5};
+      %
+      %       t0 = fix_GetPartOfTrack( handles.trx(fly), 1, f0 - 1 );
+      %       t2 = fix_GetPartOfTrack( handles.trx(fly), f1 + 1, inf );
+      %       handles.trx(fly) = fix_CatTracks( fix_CatTracks( t0, trk ), t2 );
+      %
+      %       fix_FixUpdateFly( handles, fly );
     case 'correct'
       % none
     otherwise
@@ -1083,7 +1081,7 @@ assert(false);
 %     'No Fly Selected');
 %   return;
 % end
-% 
+%
 % fly = handles.selected;
 % if handles.f <= handles.trx(fly).firstframe,
 %   handles.undolist{end+1} = {'delete',handles.f,fly,...
@@ -1091,7 +1089,7 @@ assert(false);
 %   handles = fix_DeleteFly(handles,fly);
 %   % remove events involving this fly
 %   [handles, evts_removed] = fix_RemoveFlyEvent(handles,fly,-inf,inf);
-% else  
+% else
 %    handles.undolist{end+1} = {'delete',handles.f,fly,...
 %       fix_GetPartOfTrack(handles.trx(fly),handles.f,inf)};
 %   handles.trx(fly) = fix_GetPartOfTrack(handles.trx(fly),1,handles.f-1);
@@ -1101,14 +1099,14 @@ assert(false);
 %   fix_FixUpdateFly(handles,fly);
 % end
 % handles.undolist{end}{end+1} = evts_removed;
-% 
+%
 % handles.nselect = 0;
 % handles.selected = [];
 % handles.needssaving = 1;
 % fix_EnablePanel(handles.editpanel,'on');
 % set(handles.deletepanel,'visible','off');
 % guidata(hObject,handles);
-% 
+%
 
 % --- Executes on button press in deletecancelbutton.
 function deletecancelbutton_Callback(hObject, eventdata, handles)
@@ -1291,17 +1289,17 @@ elseif strcmpi(s,'auto-track multiple...'),
   set(handles.manytrackdoitbutton,'enable','off');
   set(handles.manytracksettingsbutton,'enable','off');
 elseif strcmpi( s, 'add new track...' )
-   set( handles.addnewtrackpanel, 'visible', 'on' );
-   set( handles.addnewtrackdoitbutton, 'enable', 'on' );
+  set( handles.addnewtrackpanel, 'visible', 'on' );
+  set( handles.addnewtrackdoitbutton, 'enable', 'on' );
 elseif strcmpi( s, 'superpose tracks...' )
-   set( handles.superposetrackspanel, 'visible', 'on' );
-   handles.nselect = 1;
-   handles.superposefirstframe = -1;
-   handles.superposefirstfly = -1;
-   set( handles.superposedoitbutton, 'visible', 'off' );
-   set( handles.superposefirstflybutton, 'visible', 'on' );
+  set( handles.superposetrackspanel, 'visible', 'on' );
+  handles.nselect = 1;
+  handles.superposefirstframe = -1;
+  handles.superposefirstfly = -1;
+  set( handles.superposedoitbutton, 'visible', 'off' );
+  set( handles.superposefirstflybutton, 'visible', 'on' );
 else
-   fprintf( 1, 'unknown action selected: %s\n', s )
+  fprintf( 1, 'unknown action selected: %s\n', s )
 end
 guidata(hObject,handles);
 
@@ -1348,7 +1346,7 @@ if strcmpi(s,'birth nearby'),
       continue;
     end
     f = handles.seqs(i).frames;
-    if f >= handles.f, 
+    if f >= handles.f,
       continue;
     end
     fly = handles.seqs(i).flies;
@@ -1387,7 +1385,7 @@ elseif strcmpi(s,'death nearby'),
       continue;
     end
     f = handles.seqs(i).frames;
-    if f >= handles.f, 
+    if f >= handles.f,
       continue;
     end
     fly = handles.seqs(i).flies;
@@ -1438,7 +1436,7 @@ if strcmpi(s,'birth nearby'),
       continue;
     end
     f = handles.seqs(i).frames;
-    if f <= handles.f, 
+    if f <= handles.f,
       continue;
     end
     fly = handles.seqs(i).flies;
@@ -1477,7 +1475,7 @@ elseif strcmpi(s,'death nearby'),
       continue;
     end
     f = handles.seqs(i).frames;
-    if f <= handles.f, 
+    if f <= handles.f,
       continue;
     end
     fly = handles.seqs(i).flies;
@@ -1539,7 +1537,7 @@ function nframesplotedit_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of nframesplotedit as text
 %        str2double(get(hObject,'String')) returns contents of nframesplotedit as a double
 v = str2double(get(hObject,'string'));
-if isempty(v), 
+if isempty(v),
   set(hObject,'string',num2str(handles.f));
 else
   handles.nframesplot = v;
@@ -1609,21 +1607,21 @@ assert(false);
 %   errordlg('Selected fly is not alive in current frame!','Bad Selection');
 %   return;
 % end
-% 
+%
 % fix_SetFlySelected(handles,handles.interpolatefly,false);
 % handles.selected = [];
-% 
+%
 % f0 = handles.interpolatefirstframe;
 % f1 = handles.f;
 % if f0 > f1,
 %   tmp = f0; f0 = f1; f1 = tmp;
 % end
 % fly = handles.interpolatefly;
-% 
+%
 % % save to undo list
 % handles.undolist{end+1} = {'interpolate',[f0,f1],fly,...
 %   fix_GetPartOfTrack(handles.trx(fly),f0,f1)};
-% 
+%
 % % interpolate between f0 and f1
 % i0 = handles.trx(fly).off+(f0);
 % i1 = handles.trx(fly).off+(f1);
@@ -1642,23 +1640,23 @@ assert(false);
 % handles.trx(fly).y(i0:i1) = linspace(y0,y1,nframesinterp);
 % handles.trx(fly).a(i0:i1) = linspace(a0,a1,nframesinterp);
 % handles.trx(fly).b(i0:i1) = linspace(b0,b1,nframesinterp);
-% 
+%
 % dtheta = modrange(theta1-theta0,-pi,pi);
 % thetainterp = linspace(0,dtheta,nframesinterp)+theta0;
 % handles.trx(fly).theta(i0:i1) = modrange(thetainterp,-pi,pi);
-% 
+%
 % delete(handles.hinterpolate);
 % set(handles.interpolatefirstframebutton,'string','First Frame','Enable','on');
 % set(handles.interpolatedoitbutton,'enable','off');
 % set(handles.interpolatepanel','visible','off');
 % fix_EnablePanel(handles.editpanel,'on');
-% 
+%
 % handles.needssaving = 1;
-% 
+%
 % guidata(hObject,handles);
-% 
+%
 % fix_FixUpdateFly(handles,fly);
-% 
+%
 
 % --- Executes on button press in cancelinterpolatebutton.
 function cancelinterpolatebutton_Callback(hObject, eventdata, handles)
@@ -1763,33 +1761,33 @@ assert(false);
 %   errordlg('Please select fly track to connect first.','No Fly Selected');
 %   return;
 % end
-% 
+%
 % fly2 = handles.selected;
-% 
+%
 % if ~isalive(handles.trx(fly2),handles.f),
 %   errordlg('Selected fly is not alive in current frame!','Bad Selection');
 %   return;
 % end
-% 
+%
 % fix_SetFlySelected(handles,handles.connectfirstfly,false);
 % fix_SetFlySelected(handles,fly2,false);
 % handles.selected = [];
 % handles.nselect = 0;
-% 
+%
 % f1 = handles.connectfirstframe;
 % f2 = handles.f;
 % fly1 = handles.connectfirstfly;
-% 
+%
 % if f1 > f2,
 %   tmp = f1; f1 = f2; f2 = tmp;
 %   tmp = fly1; fly1 = fly2; fly2 = tmp;
 % end
-% 
+%
 % % save to undo list
 % handles.undolist{end+1} = {'connect',[f1,f2],[fly1,fly2],...
 %   [fix_GetPartOfTrack(handles.trx(fly1),f1+1,inf),...
 %   fix_GetPartOfTrack(handles.trx(fly2),1,f2-1)], [], []};
-% 
+%
 % % interpolate between f1 and f2
 % i1 = handles.trx(fly1).off+(f1);
 % i2 = handles.trx(fly2).off+(f2);
@@ -1808,7 +1806,7 @@ assert(false);
 %    ts2 = handles.trx(fly2).timestamps(i2);
 % end
 % nframesinterp = f2-f1+1;
-% 
+%
 % xinterp = linspace(x1,x2,nframesinterp);
 % yinterp = linspace(y1,y2,nframesinterp);
 % ainterp = linspace(a1,a2,nframesinterp);
@@ -1818,7 +1816,7 @@ assert(false);
 % if isfield( handles.trx, 'timestamps' )
 %    tsinterp = linspace( ts1, ts2, nframesinterp );
 % end
-% 
+%
 % % will we need to cut?
 % f3 = handles.trx(fly2).endframe;
 % if f3 < handles.trx(fly1).endframe,
@@ -1841,7 +1839,7 @@ assert(false);
 %   handles.trx(fly1).nframes = handles.trx(fly1).nframes+nappend;
 %   handles.trx(fly1).endframe = f3;
 % end
-% 
+%
 % % copy over the interpolation
 % idx = i1:handles.trx(fly1).off+(f2);
 % handles.trx(fly1).x(idx) = xinterp;
@@ -1852,7 +1850,7 @@ assert(false);
 % if isfield( handles.trx, 'timestamps' )
 %    handles.trx(fly1).timestamps(idx) = tsinterp;
 % end
-% 
+%
 % % copy over fly2
 % idx1 = handles.trx(fly1).off+(f2):handles.trx(fly1).off+(f3);
 % idx2 = handles.trx(fly2).off+(f2):handles.trx(fly2).off+(f3);
@@ -1864,7 +1862,7 @@ assert(false);
 % if isfield( handles.trx, 'timestamps' )
 %    handles.trx(fly1).timestamps(idx1) = handles.trx(fly2).timestamps(idx2);
 % end
-% 
+%
 % % delete fly
 % handles = fix_DeleteFly(handles,fly2);
 % % replace fly2 with fly1 for frames f2 thru f3
@@ -1872,17 +1870,17 @@ assert(false);
 % [handles, seqs_removed] = fix_RemoveFlyEvent(handles,fly2,-inf,inf);
 % handles.undolist{end}{end} = seqs_removed;
 % handles = fix_FixDeathEvent(handles,fly1);
-% 
+%
 % delete(handles.hconnect);
 % set(handles.connectfirstflybutton,'string','First Fly','Enable','on');
 % set(handles.connectdoitbutton,'enable','off');
 % set(handles.connectpanel','visible','off');
 % fix_EnablePanel(handles.editpanel,'on');
-% 
+%
 % handles.needssaving = 1;
-% 
+%
 % guidata(hObject,handles);
-% 
+%
 % fix_FixUpdateFly(handles,fly1);
 
 
@@ -1987,14 +1985,14 @@ if f < handles.trx(fly).firstframe,
   handles.trx(fly).firstframe = f;
   handles.trx(fly).off = -handles.trx(fly).firstframe + 1;
   if isfield( handles.trx, 'timestamps' )
-     if isfield( handles, 'timestamps' )
-        handles.trx(fly).timestamps = [handles.timestamps(1:n), handles.trx(fly).timestamps];
-     else
-        handles.trx(fly).timestamps = [ones(1,n).*handles.trx(fly).timestamps(1), handles.trx(fly).timestamps];
-     end
+    if isfield( handles, 'timestamps' )
+      handles.trx(fly).timestamps = [handles.timestamps(1:n), handles.trx(fly).timestamps];
+    else
+      handles.trx(fly).timestamps = [ones(1,n).*handles.trx(fly).timestamps(1), handles.trx(fly).timestamps];
+    end
   end
   if ~all( size( handles.trx(fly).timestamps ) == size( handles.trx(fly).x ) )
-     keyboard
+    keyboard
   end
   %handles.trx(fly).f2i = @(f) f - handles.trx(fly).firstframe + 1;
   handles.trx(fly).nframes = length(handles.trx(fly).x);
@@ -2008,7 +2006,7 @@ else
   handles.trx(fly).b = [handles.trx(fly).b, zeros(1,n)];
   handles.trx(fly).theta = [handles.trx(fly).theta, zeros(1,n)];
   if isfield( handles.trx, 'timestamps' )
-     handles.trx(fly).timestamps = [handles.trx(fly).timestamps, zeros(1,n)];
+    handles.trx(fly).timestamps = [handles.trx(fly).timestamps, zeros(1,n)];
   end
   handles.trx(fly).x(end-n+1:end) = handles.trx(fly).x(end-n);
   handles.trx(fly).y(end-n+1:end) = handles.trx(fly).y(end-n);
@@ -2016,14 +2014,14 @@ else
   handles.trx(fly).b(end-n+1:end) = handles.trx(fly).b(end-n);
   handles.trx(fly).theta(end-n+1:end) = handles.trx(fly).theta(end-n);
   if isfield( handles.trx, 'timestamps' )
-     if isfield( handles, 'timestamps' )
-        handles.trx(fly).timestamps(end-n+1:end) = handles.timestamps(handles.trx(fly).endframe+1:f);
-     else
-        handles.trx(fly).timestamps(end-n+1:end) = handles.trx(fly).timestamps(end-n) + (1:n)*(handles.trx(fly).timestamps(2) - handles.trx(fly).timestamps(1));
-     end
+    if isfield( handles, 'timestamps' )
+      handles.trx(fly).timestamps(end-n+1:end) = handles.timestamps(handles.trx(fly).endframe+1:f);
+    else
+      handles.trx(fly).timestamps(end-n+1:end) = handles.trx(fly).timestamps(end-n) + (1:n)*(handles.trx(fly).timestamps(2) - handles.trx(fly).timestamps(1));
+    end
   end
   if ~all( size( handles.trx(fly).timestamps ) == size( handles.trx(fly).x ) )
-     keyboard
+    keyboard
   end
   handles.trx(fly).nframes = length(handles.trx(fly).x);
   handles.trx(fly).endframe = f;
@@ -2071,19 +2069,19 @@ assert(false);
 
 % f0 = min(handles.f,handles.autotrackframe);
 % f1 = max(handles.f,handles.autotrackframe);
-% 
+%
 % fix_SetFlySelected(handles,handles.autotrackfly,false);
 % handles.selected = [];
-% 
+%
 % fly = handles.autotrackfly;
-% 
+%
 % % save to undo list
 % handles.undolist{end+1} = {'autotrack',[f0,f1],fly,fix_GetPartOfTrack(handles.trx(fly),f0,f1)};
-% 
+%
 % set(handles.autotrackcancelbutton,'string','Stop');
 % set(handles.autotrackdoitbutton,'enable','off');
 % handles.stoptracking = false;
-% 
+%
 % % track
 % seq.flies = fly;
 % seq.frames = f0:min(f1,handles.trx(fly).endframe);
@@ -2092,28 +2090,28 @@ assert(false);
 % end
 % handles.stoptracking = false;
 % handles = fix_FixTrackFlies([fly],f0,f1,handles);
-% 
+%
 % if isfield( handles, 'trackingstoppedframe' )
 % %    handles.f = handles.trackingstopped;
 %    handles = rmfield( handles, 'trackingstoppedframe' );
-% 
+%
 % %    fix_SetFrameNumber( handles, hobject );
 % %    fix_PlotFrame( handles );
 % end
-% 
+%
 % handles = fix_FixDeathEvent(handles,fly);
-% 
+%
 % delete(handles.hautotrack);
 % set(handles.autotrackcancelbutton,'string','Cancel');
 % set(handles.autotrackfirstframebutton,'Enable','on');
 % set(handles.autotrackdoitbutton,'enable','off');
 % set(handles.autotrackpanel','visible','off');
 % fix_EnablePanel(handles.editpanel,'on');
-% 
+%
 % handles.needssaving = 1;
-% 
+%
 % guidata(hObject,handles);
-% 
+%
 % fix_FixUpdateFly(handles,fly);
 
 
@@ -2309,25 +2307,25 @@ assert(false);
 
 % f0 = min(handles.f,handles.manytrackframe);
 % f1 = max(handles.f,handles.manytrackframe);
-% 
+%
 % for fly = handles.manytrackflies(:)',
 %   fix_SetFlySelected(handles,fly,false);
 % end
 % handles.selected = [];
-% 
+%
 % flies = handles.manytrackflies;
-% 
+%
 % % save to undo list
 % for i = 1:length(flies),
 %   fly = flies(i);
 %   oldtrx(i) = fix_GetPartOfTrack(handles.trx(fly),f0,f1);
 % end
 % handles.undolist{end+1} = {'manytrack',[f0,f1],flies,oldtrx};
-% 
+%
 % set(handles.manytrackcancelbutton,'string','Stop');
 % set(handles.manytrackdoitbutton,'enable','off');
 % handles.stoptracking = false;
-% 
+%
 % % track
 % seq.flies = flies;
 % seq.frames = f0:min(f1,[handles.trx(flies).endframe]);
@@ -2345,11 +2343,11 @@ assert(false);
 % set(handles.manytrackdoitbutton,'enable','off');
 % set(handles.manytrackpanel','visible','off');
 % fix_EnablePanel(handles.editpanel,'on');
-% 
+%
 % handles.needssaving = 1;
-% 
+%
 % guidata(hObject,handles);
-% 
+%
 % for fly = flies(:)',
 %   fix_FixUpdateFly(handles,fly);
 % end
@@ -2454,12 +2452,12 @@ function addnewtrackdoitbutton_Callback(hObject, eventdata, handles)
 new_id = 0;
 new_timestamp = -1;
 for fly = 1:length( handles.trx )
-   new_id = max( [handles.trx(fly).id + 1, new_id] );
-   if new_timestamp == -1 && ...
-         handles.trx(fly).firstframe <= handles.f && ...
-         handles.trx(fly).endframe >= handles.f
-      new_timestamp = handles.trx(fly).timestamps(handles.trx(fly).firstframe + handles.f - 1);
-   end
+  new_id = max( [handles.trx(fly).id + 1, new_id] );
+  if new_timestamp == -1 && ...
+      handles.trx(fly).firstframe <= handles.f && ...
+      handles.trx(fly).endframe >= handles.f
+    new_timestamp = handles.trx(fly).timestamps(handles.trx(fly).firstframe + handles.f - 1);
+  end
 end
 
 % fill in new fly
@@ -2496,9 +2494,9 @@ handles.undolist{end+1} = {'addnew',fly};
 handles.nflies = handles.nflies + 1;
 handles = fix_SetFlyColors(handles);
 [handles.hellipse(fly),handles.hcenter(fly),handles.hhead(fly),...
-   handles.htail(fly),handles.hleft(fly),handles.hright(fly),...
-   handles.htailmarker(fly),handles.hpath(fly)] = ...
-   InitFly(handles.colors(fly,:));
+  handles.htail(fly),handles.hleft(fly),handles.hright(fly),...
+  handles.htailmarker(fly),handles.hpath(fly)] = ...
+  InitFly(handles.colors(fly,:));
 handles = fix_UpdateFlyPathVisible(handles);
 fix_FixUpdateFly(handles,fly);
 
@@ -2544,18 +2542,18 @@ assert(false);
 %   errordlg('Second fly is not alive in first frame.','Bad Selection');
 %   return
 % end
-% 
+%
 % % calculate indices
 % fly1 = handles.superposefirstfly;
 % fly2 = handles.selected;
 % idx1 = handles.trx(fly1).off + (handles.superposefirstframe:handles.f);
 % idx2 = handles.trx(fly2).off + (handles.superposefirstframe:handles.f);
-% 
+%
 % % save to undo list
 % olddata = fix_GetPartOfTrack( handles.trx(fly2), handles.superposefirstframe, handles.f );
 % handles.undolist{end+1} = {'superpose', handles.selected, ...
 %    handles.superposefirstframe, handles.f, olddata};
-% 
+%
 % % superpose
 % handles.trx(fly2).x(idx2) = handles.trx(fly1).x(idx1);
 % handles.trx(fly2).y(idx2) = handles.trx(fly1).y(idx1);
@@ -2565,20 +2563,20 @@ assert(false);
 % if isfield( handles.trx, 'timestamps' )
 %    handles.trx(fly2).timestamps(idx2) = handles.trx(fly1).timestamps(idx1);
 % end
-% 
+%
 % % clean up
 % delete(handles.hsuperpose);
 % fix_SetFlySelected( handles, fly1, false );
 % fix_SetFlySelected( handles, fly2, false );
-% 
+%
 % handles.nselect = 0;
 % handles.selected = [];
 % set(handles.superposetrackspanel,'visible','off');
 % fix_EnablePanel(handles.editpanel,'on');
 % handles.needssaving = 1;
-% 
+%
 % guidata(hObject,handles);
-% 
+%
 % fix_FixUpdateFly( handles, fly1 );
 % fix_FixUpdateFly( handles, fly2 );
 
@@ -2629,7 +2627,7 @@ if isfield(handles,'hsuperpose') && ishandle(handles.hsuperpose),
   delete(handles.hsuperpose);
 end
 if isfield( handles, 'superposefirstfly' )
-   fix_SetFlySelected( handles, handles.superposefirstfly, false );
+  fix_SetFlySelected( handles, handles.superposefirstfly, false );
 end
 fix_SetFlySelected( handles, handles.selected, false );
 set( handles.superposefirstflybutton, 'visible', 'on' );
@@ -2694,7 +2692,7 @@ for fni = 1:ntags
   h = handles.(fn);
   pos = get(h,'Position');
   pos(3) = axpos(3)-10;
-  set(h,'Position',pos); 
+  set(h,'Position',pos);
 end
 
 
@@ -2711,7 +2709,7 @@ function figure1_KeyPressFcn(hObject, eventdata, handles)
 switch eventdata.Key,
   
   case 'rightarrow',
-
+    
     if handles.f < handles.nframes,
       handles.f = handles.f+1;
       fix_SetFrameNumber(handles,handles.f);
@@ -2720,7 +2718,7 @@ switch eventdata.Key,
     end
     
   case 'leftarrow',
-
+    
     if handles.f > 1,
       handles.f = handles.f-1;
       fix_SetFrameNumber(handles,handles.f);
@@ -2811,7 +2809,7 @@ function playcleanup(hObject,handles)
 handles.isplaying = false;
 % playcore does not update guidata, to avoid collisions with stop; read
 % current frame from controls to update handles.f
-handles.f = str2double(handles.frameedit.String); 
+handles.f = str2double(handles.frameedit.String);
 guidata(hObject,handles);
 fix_SetFrameNumber(handles);
 fix_PlotFrame(handles);
@@ -2840,14 +2838,14 @@ for f = frmsPlay
   handles = guidata(hObject);
   if ~handles.isplaying
     break;
-  end  
+  end
   
   handles.f = f;
   fix_SetFrameNumber(handles);
   fix_PlotFrame(handles);
   % Note, handles.f not updated in guidata
   drawnow;
-
+  
   if handles.frmIsSeq(f)
     dtFrm = toc;
     pauseTime = minSPFseq - dtFrm; % could be negative
