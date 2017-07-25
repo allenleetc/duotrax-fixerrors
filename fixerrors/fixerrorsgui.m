@@ -220,15 +220,12 @@ playstopbutton_Callback(handles.playstopbutton,[],handles);
 
 
 function InitializeKeyPressFcns(handles)
-
 h = findobj(handles.figure1,'KeyPressFcn','');
 set(h,'KeyPressFcn',get(handles.figure1,'KeyPressFcn'));
 
 
 function handles = InitializeMainAxes(handles)
-
 handles.mainaxesaspectratio = 1;
-
 
 %function InitializeDisplayPanel(handles)
 
@@ -2695,9 +2692,6 @@ for fni = 1:ntags
   set(h,'Position',pos);
 end
 
-
-
-% --- Executes on key press with focus on figure1 and none of its controls.
 function figure1_KeyPressFcn(hObject, eventdata, handles)
 % hObject    handle to figure1 (see GCBO)
 % eventdata  structure with the following fields (see FIGURE)
@@ -2706,28 +2700,20 @@ function figure1_KeyPressFcn(hObject, eventdata, handles)
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
 
-switch eventdata.Key,
-  
-  case 'rightarrow',
-    
-    if handles.f < handles.nframes,
-      handles.f = handles.f+1;
-      fix_SetFrameNumber(handles,handles.f);
-      fix_PlotFrame(handles);
-      guidata(hObject,handles);
-    end
-    
-  case 'leftarrow',
-    
-    if handles.f > 1,
-      handles.f = handles.f-1;
-      fix_SetFrameNumber(handles,handles.f);
-      fix_PlotFrame(handles);
-      guidata(hObject,handles);
-    end
-    
+switch eventdata.Key
+  case 'leftarrow'
+    f = max(handles.f-1,1);
+  case 'rightarrow'
+    f = min(handles.f+1,handles.nframes);
+  case 'downarrow'
+    f = max(handles.f-50,1);
+  case 'uparrow'
+    f = min(handles.f+50,handles.nframes);
 end
-
+handles.f = f;
+fix_SetFrameNumber(handles);
+fix_PlotFrame(handles);
+guidata(hObject,handles);
 
 % --- Executes on button press in flipimage_checkbox.
 function flipimage_checkbox_Callback(hObject, eventdata, handles)
