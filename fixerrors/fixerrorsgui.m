@@ -842,21 +842,20 @@ fprintf('Saved temporary progress: %s\n',handles.savename);
 handles.needssaving = 0;
 guidata(hObject,handles);
 
-
-% --- Executes on button press in quitbutton.
 function quitbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to quitbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% AL: This is "Export and Quit". To just Quit, kill the window.
+% "Export and Quit". To just Quit, kill the window.
 
 [path,trxfname] = filenamesplit(handles.matname);
 trxfname = splitext(trxfname);
+% strip/replace existing fixed_<timestamp> if it is there
+PAT = '_fixed_[0-9]{8,8}T[0-9]{6,6}$';
+trxfname = regexprep(trxfname,PAT,'');
+
 nowstr = datestr(now,'yyyymmddTHHMMSS');
 trxfname = sprintf('%s_fixed_%s.mat',trxfname,nowstr);
 trxfname = fullfile(path,trxfname);
-diagfname = fullfile(path,sprintf('fixerrors_%s.mat',nowstr));
+diagfname = sprintf('fixerrors_%s.mat',nowstr);
+diagfname = fullfile(path,diagfname); 
 
 fprintf(1,'Saving fixed trxfile: %s.\n',trxfname);
 trx = handles.trx;
