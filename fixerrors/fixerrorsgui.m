@@ -115,7 +115,7 @@ handles.motionobj = [];
 handles.plotpath = 'All Flies';
 handles.nframesplot = 101;
 handles.zoommode = 'Whole Arena';
-handles.needssaving = 0;
+handles = needsSaveReset(handles);
 handles.isplaying = false;
 handles.MaxFPS = 40;
 handles.MinSPF = 1/handles.MaxFPS;
@@ -551,7 +551,6 @@ fix_SetCreatedObjectBgColor( hObject, 'white' );
 function correctbutton_Callback(hObject, eventdata, handles)
 
 handles.undolist{end+1} = {'correct',handles.seqi,handles.seqs(handles.seqi)};
-handles.needssaving = 1;
 
 handles.seqs(handles.seqi).status = SeqStatus.CORRECT;
 handles.seqs(handles.seqi).statusTS = now;
@@ -569,13 +568,13 @@ handles.seqTable.setSeqData(handles.seqs);
 
 fix_SetErrorTypes(handles);
 
-% quit if this is the last sequence
-if strcmpi(get(handles.correctbutton,'string'),'finish')
-  msgbox('All suspicious sequences have been corrected. Quitting.','All Done');
-  savebutton_Callback(hObject, [], handles);
-  uiresume(handles.figure1);
-  return;
-end
+% % quit if this is the last sequence
+% if strcmpi(get(handles.correctbutton,'string'),'finish')
+%   msgbox('All suspicious sequences have been corrected. Quitting.','All Done');
+%   savebutton_Callback(hObject, [], handles);
+%   uiresume(handles.figure1);
+%   return;
+% end
 
 s = lclGetPUMContents(handles.nexterrortypemenu);
 
@@ -632,8 +631,8 @@ elseif strcmpi(sortby,'fly')
   handles = fix_SetSeq(handles,idx(j));
 end
 
+handles = needsSave(handles);
 guidata(hObject,handles);
-
 playstopbutton_Callback(handles.playstopbutton,[],handles);
 
 function gotoseq(handles,iSeq) % updates handles
@@ -754,7 +753,7 @@ end
 save(savename,'-struct','ssave');
 fprintf('Saved progress: %s\n',savename);
 
-handles.needssaving = 0;
+handles = needsSaveReset(handles);
 
 function menu_file_save_export_trx_Callback(hObject, eventdata, handles)
 
@@ -958,7 +957,7 @@ end
 
 handles.nselect = 0;
 handles.selected = [];
-handles.needssaving = 1;
+handles = needsSave(handles);
 guidata(hObject,handles);
 
 
@@ -1043,12 +1042,9 @@ handles.selected = [];
 set(handles.swappanel,'visible','off');
 fix_EnablePanel(handles.editpanel,'on');
 
-handles.needssaving = 1;
-
+handles = needsSave(handles);
 guidata(hObject,handles);
 
-
-% --- Executes on button press in renamecancelbutton.
 function renamecancelbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to renamecancelbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1056,24 +1052,34 @@ function renamecancelbutton_Callback(hObject, eventdata, handles)
 
 fix_ActionCancelled( hObject, handles, handles.swappanel )
 
-
-% --- Executes on mouse press over axes background.
 function mainaxes_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to mainaxes (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --- Executes when user attempts to close figure1.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % hObject    handle to figure1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-closereq
-% Hint: delete(hObject) closes the figure
-%delete(hObject);
-
+if handles.needssaving
+  resp = questdlg('There are unsaved changes. Save first?',...
+    'Unsaved changes',...
+    'Yes, save then quit','No, discard changes','Cancel','Cancel');
+  if isempty(resp)
+    resp = 'Cancel';
+  end
+  switch resp
+    case 'Yes, save then quit'
+      handles = saveProgress(handles,now());
+      guidata(hObject,handles);
+    case 'No, discard changes'
+      % none
+    case 'Cancel'
+      return
+  end
+end
+delete(hObject);
 
 % --- Executes on button press in debugbutton.
 function debugbutton_Callback(hObject, eventdata, handles)
@@ -1849,6 +1855,8 @@ function extenddoitbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+assert(false,'dtfe');
+
 if isalive(handles.trx(handles.extendfly),handles.f),
   errordlg('Selected fly is alive in current frame!','Bad Selection');
   return;
@@ -1929,8 +1937,7 @@ set(handles.extenddoitbutton,'enable','off');
 set(handles.extendpanel','visible','off');
 fix_EnablePanel(handles.editpanel,'on');
 
-handles.needssaving = 1;
-
+handles = needsSave(handles);
 guidata(hObject,handles);
 
 fix_FixUpdateFly(handles,fly);
@@ -2117,12 +2124,10 @@ set(handles.flipdoitbutton,'enable','off');
 set(handles.flippanel','visible','off');
 fix_EnablePanel(handles.editpanel,'on');
 
-handles.needssaving = 1;
-
+handles = needsSave(handles);
 guidata(hObject,handles);
 
 fix_FixUpdateFly(handles,fly);
-
 
 % --- Executes on button press in flipcancelbutton.
 function flipcancelbutton_Callback(hObject, eventdata, handles)
@@ -2343,6 +2348,8 @@ function addnewtrackdoitbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+assert(false,'dtfe');
+
 new_id = 0;
 new_timestamp = -1;
 for fly = 1:length( handles.trx )
@@ -2397,12 +2404,10 @@ fix_FixUpdateFly(handles,fly);
 set(handles.addnewtrackdoitbutton,'Enable','off');
 set(handles.addnewtrackpanel','visible','off');
 fix_EnablePanel(handles.editpanel,'on');
-handles.needssaving = 1;
 
+handles = needsSave(handles);
 guidata(hObject,handles);
 
-
-% --- Executes on button press in addnewtrackcancelbutton.
 function addnewtrackcancelbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to addnewtrackcancelbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -2755,6 +2760,13 @@ if handles.isplaying && tfReset % don''t reset if stopped/canceled
   fix_SetFrameNumber(handles);
   fix_PlotFrame(handles);
 end
+
+function handles = needsSave(handles) 
+handles.needssaving = 1;
+handles.txUnsavedChanges.Visible = 'on';
+function handles = needsSaveReset(handles)
+handles.needssaving = 0;
+handles.txUnsavedChanges.Visible = 'off';
 
 function cbkSelectSeq(pnlSeq,irow)
 handles = guidata(pnlSeq);
