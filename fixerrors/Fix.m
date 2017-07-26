@@ -45,6 +45,52 @@ classdef Fix
     FLDS_TIMESERIESDATA = lclInitFldsTS();
     FLDS_MATCH = lclInitFldsMatch();
     FLDS_RM = lclInitFldsRm();
+    
+    CONFIGFILE = lclInitConfigFile();
+  end
+  
+  methods (Static)
+    
+    function val = cfgGetProp(prop)
+      cfgfile = Fix.CONFIGFILE;
+      if exist(cfgfile,'file')>0 && ismember(prop,who('-file',cfgfile))
+        val = load(cfgfile,prop);
+        val = val.(prop);
+      else
+        val = [];
+      end
+    end
+    
+    function cfgSetProp(prop,val)
+      tmp = struct(prop,val); %#ok<NASGU>
+      cfgfile = Fix.CONFIGFILE;
+      if exist(cfgfile,'file')==2
+        save(cfgfile,'-append','-struct','tmp');
+      else
+        save(cfgfile,'-struct','tmp');
+      end
+    end
+    
+  end
+  
+  methods (Static)
+    
+    function savedProgS = createSavedProgFilename(movienameS,trxnameS)
+      PAT = 'dtfeSavedProg@%s@%s@%s.mat';
+      nowstr = datestr(now,'yyyymmddTHHMMSS');
+      savedProgS = sprintf(PAT,movienameS,trxnameS,nowstr);
+    end
+    
+    function savedProgFiles = findSavedProgFiles(moviename)
+      [moviepath,movienameS] = fileparts(moviename);
+      dd = dir(fullfile(moviepath,'*.mat'));
+      mats = {dd.name}';
+      PAT = sprintf('dtfeSavedProg@%s@[^@]+@[0-9]{8,8}T[0-9]{6,6}.mat$',movienameS);
+      tf = cellfun(@(x)~isempty(regexp(x,PAT,'once')),mats);
+      mats = mats(tf);      
+      savedProgFiles = cellfun(@(x)fullfile(moviepath,x),mats,'uni',0);
+    end
+    
   end
   
 end
@@ -57,4 +103,9 @@ flds = Fix.FLDS.fld(strcmp(Fix.FLDS.type,'match'));
 end
 function flds = lclInitFldsRm()
 flds = Fix.FLDS.fld(Fix.FLDS.rm);
+end
+
+function cfgfile = lclInitConfigFile()
+fe = which('fixerrors');
+cfgfile = strrep(fe,'fixerrors.m','.fixerrorsrc.mat');  
 end

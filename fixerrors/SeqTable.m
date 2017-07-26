@@ -28,7 +28,7 @@ classdef SeqTable < handle
       jt.Units = posunits;
       jt.Position = pos;
       jt.Units = 'normalized'; % so will confirm to parent
-      jt.MouseClickedCallback = @(src,evt)obj.cbkClick(src,evt);
+      jt.CellSelectionCallback = @(src,evt)obj.cbkRowSelected(src,evt);
       obj.jtable = jt;
       obj.cbkSelectSeq = cbk;
     end
@@ -80,7 +80,7 @@ classdef SeqTable < handle
       end
     end
     
-    function cbkClick(obj,src,evt) %#ok<INUSD>
+    function cbkRowSelected(obj,src,evt) %#ok<INUSD>
       irow = obj.getSelectedRows();
       if numel(irow)>1
         warning('SeqTable:sel',...

@@ -52,12 +52,7 @@ else
   [handles.readframe,handles.nframes,handles.fid] = get_readframe_fcn(handles.moviename);
 end
 if length(varargin) > 8
-  handles.circular_arena = varargin{9};
-else
-  handles.circular_arena = struct( 'do_set_circular_arena', 0 );
-end
-if length(varargin) > 9
-  handles.undolist = varargin{10};
+  handles.undolist = varargin{9};
 else
   handles.undolist = {};
 end
@@ -808,27 +803,22 @@ assert(false);
 %    end % found a sequence in undo list that was marked 'correct'
 % end % for each item in undo list
 
-
-% --- Executes on button press in savebutton.
 function savebutton_Callback(hObject, eventdata, handles)
-% hObject    handle to savebutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% AL: This is "Save Progress"
+% "Save Progress"
 
 global defaultpath;
 
-if ~isfield(handles,'savename') || isempty(handles.savename),
-  [path,defaultfilename] = filenamesplit(handles.moviename);
-  defaultfilename = splitext(defaultfilename);
-  defaultfilename = ['fixed_',defaultfilename,'.mat'];
-  if ~isempty(defaultpath),
-    defaultfilename = [defaultpath,defaultfilename];
-  end
-  [filename,defaultpath] = uiputfile('*.mat','Save FixErrors Progress',defaultfilename);
-  handles.savename = [defaultpath,filename];
-end
+assert(isfield(handles,'savename') && ~isempty(handles.savename));
+% if ~isfield(handles,'savename') || isempty(handles.savename),
+%   [path,defaultfilename] = filenamesplit(handles.moviename);
+%   defaultfilename = splitext(defaultfilename);
+%   defaultfilename = ['fixed_',defaultfilename,'.mat'];
+%   if ~isempty(defaultpath),
+%     defaultfilename = [defaultpath,defaultfilename];
+%   end
+%   [filename,defaultpath] = uiputfile('*.mat','Save FixErrors Progress',defaultfilename);
+%   handles.savename = [defaultpath,filename];
+% end
 
 SAVEFLDS = {'trx' 'undolist' 'seqs' 'doneseqs' 'moviename' 'seqi' ...
   'params' 'matname' 'annname'};
@@ -843,7 +833,7 @@ handles.needssaving = 0;
 guidata(hObject,handles);
 
 function quitbutton_Callback(hObject, eventdata, handles)
-% "Export and Quit". To just Quit, kill the window.
+% "Export Trx". To just Quit, kill the window.
 
 [path,trxfname] = filenamesplit(handles.matname);
 trxfname = splitext(trxfname);
@@ -854,8 +844,8 @@ trxfname = regexprep(trxfname,PAT,'');
 nowstr = datestr(now,'yyyymmddTHHMMSS');
 trxfname = sprintf('%s_fixed_%s.mat',trxfname,nowstr);
 trxfname = fullfile(path,trxfname);
-diagfname = sprintf('fixerrors_%s.mat',nowstr);
-diagfname = fullfile(path,diagfname); 
+% diagfname = sprintf('fixerrors_%s.mat',nowstr);
+% diagfname = fullfile(path,diagfname); 
 
 fprintf(1,'Saving fixed trxfile: %s.\n',trxfname);
 trx = handles.trx;
@@ -863,9 +853,9 @@ fldsRm = intersect(fieldnames(trx),Fix.FLDS_RM);
 trx = rmfield(trx,fldsRm); %#ok<NASGU>
 save(trxfname,'trx');
 
-fprintf(1,'Saving diagfile: %s.\n',diagfname);
-events = handles.undolist; %#ok<NASGU>
-save(diagfname,'events');
+% fprintf(1,'Saving diagfile: %s.\n',diagfname);
+% events = handles.undolist; %#ok<NASGU>
+% save(diagfname,'events');
 
 % if handles.needssaving
 %    v = questdlg('Save progress before quitting?','Save?','Yes','No','Yes');
@@ -2700,19 +2690,25 @@ function figure1_KeyPressFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 switch eventdata.Key
-  case 'leftarrow'
-    f = max(handles.f-1,1);
-  case 'rightarrow'
-    f = min(handles.f+1,handles.nframes);
-  case 'downarrow'
-    f = max(handles.f-50,1);
-  case 'uparrow'
-    f = min(handles.f+50,handles.nframes);
+  case {'leftarrow' 'rightarrow' 'downarrow' 'uparrow'}
+    switch eventdata.Key
+      case 'leftarrow'
+        f = max(handles.f-1,1);
+      case 'rightarrow'
+        f = min(handles.f+1,handles.nframes);
+      case 'downarrow'
+        f = max(handles.f-50,1);
+      case 'uparrow'
+        f = min(handles.f+50,handles.nframes);
+    end
+    handles.f = f;
+    fix_SetFrameNumber(handles);
+    fix_PlotFrame(handles);
+    guidata(hObject,handles);
+  otherwise
+    % none
 end
-handles.f = f;
-fix_SetFrameNumber(handles);
-fix_PlotFrame(handles);
-guidata(hObject,handles);
+
 
 % --- Executes on button press in flipimage_checkbox.
 function flipimage_checkbox_Callback(hObject, eventdata, handles)
