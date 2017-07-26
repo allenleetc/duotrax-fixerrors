@@ -37,25 +37,10 @@ handles.trx = varargin{3};
 handles.annname = varargin{4};
 handles.params = varargin{5};
 handles.matname = varargin{6};
-if length(varargin) > 6
-  handles.savename = varargin{7};
-  didload = false;
-else
-  didload = false;
-end
-if length(varargin) > 7
-  readframe_fcn = varargin{8};
-  handles.readframe = readframe_fcn.readframe;
-  handles.nframes = readframe_fcn.nframes;
-  handles.fid = readframe_fcn.fid;
-else
-  [handles.readframe,handles.nframes,handles.fid] = get_readframe_fcn(handles.moviename);
-end
-if length(varargin) > 8
-  handles.undolist = varargin{9};
-else
-  handles.undolist = {};
-end
+handles.undolist = varargin{7};
+handles.doneseqs = varargin{8};
+
+[handles.readframe,handles.nframes,handles.fid] = get_readframe_fcn(handles.moviename);
 
 % get timestamps
 if isfield(handles.trx,'timestamps'),
@@ -112,10 +97,8 @@ for iseq = 1:length(handles.seqs),
     break;
   end
 end
-if ~isseqleft,
-  if ~didload,
-    handles.doneseqs = [];
-  end
+if ~isseqleft
+  handles.doneseqs = [];
   guidata(hObject,handles);
   msgbox('No suspicious sequences to be corrected. Exiting. ','All Done');
   uiresume(handles.figure1);
@@ -158,11 +141,6 @@ else
   handles.bgmed = bgmean;
 end
 % initialize data structures
-
-% initialize structure to hold seqs that are done
-if ~didload,
-  handles.doneseqs = [];
-end
 
 % initialize gui
 
@@ -560,58 +538,15 @@ else
   lclSetFrame(handles,f);
 end
 
-% --- Executes during object creation, after setting all properties.
 function frameedit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to frameedit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 fix_SetCreatedObjectBgColor( hObject, 'white' );
 
-
-% --- Executes on selection change in nexterrortypemenu.
 function nexterrortypemenu_Callback(hObject, eventdata, handles)
-% hObject    handle to nexterrortypemenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = get(hObject,'String') returns nexterrortypemenu contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from nexterrortypemenu
-
-
-% --- Executes during object creation, after setting all properties.
 function nexterrortypemenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to nexterrortypemenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 fix_SetCreatedObjectBgColor( hObject, 'white' );
-
-
-% --- Executes on selection change in sortbymenu.
 function sortbymenu_Callback(hObject, eventdata, handles)
-% hObject    handle to sortbymenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = get(hObject,'String') returns sortbymenu contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from sortbymenu
-
-
-% --- Executes during object creation, after setting all properties.
 function sortbymenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sortbymenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 fix_SetCreatedObjectBgColor( hObject, 'white' );
-
 
 function correctbutton_Callback(hObject, eventdata, handles)
 
@@ -803,37 +738,27 @@ assert(false);
 %    end % found a sequence in undo list that was marked 'correct'
 % end % for each item in undo list
 
-function savebutton_Callback(hObject, eventdata, handles)
+function menu_file_save_Callback(hObject, eventdata, handles)
 % "Save Progress"
+handles = saveProgress(handles,now());
+guidata(hObject,handles);
 
-global defaultpath;
-
-assert(isfield(handles,'savename') && ~isempty(handles.savename));
-% if ~isfield(handles,'savename') || isempty(handles.savename),
-%   [path,defaultfilename] = filenamesplit(handles.moviename);
-%   defaultfilename = splitext(defaultfilename);
-%   defaultfilename = ['fixed_',defaultfilename,'.mat'];
-%   if ~isempty(defaultpath),
-%     defaultfilename = [defaultpath,defaultfilename];
-%   end
-%   [filename,defaultpath] = uiputfile('*.mat','Save FixErrors Progress',defaultfilename);
-%   handles.savename = [defaultpath,filename];
-% end
-
+function handles = saveProgress(handles,timestamp)
+savename = Fix.createSavedProgFilename(handles.moviename,handles.matname,timestamp);
 SAVEFLDS = {'trx' 'undolist' 'seqs' 'doneseqs' 'moviename' 'seqi' ...
   'params' 'matname' 'annname'};
 ssave = struct();
 for f=SAVEFLDS,f=f{1}; %#ok<FXSET>
   ssave.(f) = handles.(f);
 end
-save(handles.savename,'-struct','ssave');
-fprintf('Saved temporary progress: %s\n',handles.savename);
+save(savename,'-struct','ssave');
+fprintf('Saved progress: %s\n',savename);
 
 handles.needssaving = 0;
-guidata(hObject,handles);
 
-function quitbutton_Callback(hObject, eventdata, handles)
-% "Export Trx". To just Quit, kill the window.
+function menu_file_save_export_trx_Callback(hObject, eventdata, handles)
+
+timestamp = now();
 
 [path,trxfname] = filenamesplit(handles.matname);
 trxfname = splitext(trxfname);
@@ -841,37 +766,20 @@ trxfname = splitext(trxfname);
 PAT = '_fixed_[0-9]{8,8}T[0-9]{6,6}$';
 trxfname = regexprep(trxfname,PAT,'');
 
-nowstr = datestr(now,'yyyymmddTHHMMSS');
+nowstr = datestr(timestamp,'yyyymmddTHHMMSS');
 trxfname = sprintf('%s_fixed_%s.mat',trxfname,nowstr);
 trxfname = fullfile(path,trxfname);
-% diagfname = sprintf('fixerrors_%s.mat',nowstr);
-% diagfname = fullfile(path,diagfname); 
 
-fprintf(1,'Saving fixed trxfile: %s.\n',trxfname);
+fprintf(1,'Saved fixed trxfile: %s.\n',trxfname);
 trx = handles.trx;
 fldsRm = intersect(fieldnames(trx),Fix.FLDS_RM);
 trx = rmfield(trx,fldsRm); %#ok<NASGU>
 save(trxfname,'trx');
 
-% fprintf(1,'Saving diagfile: %s.\n',diagfname);
-% events = handles.undolist; %#ok<NASGU>
-% save(diagfname,'events');
+handles = saveProgress(handles,timestamp);
+guidata(hObject,handles);
 
-% if handles.needssaving
-%    v = questdlg('Save progress before quitting?','Save?','Yes','No','Yes');
-%    if strcmpi(v,'yes'),
-%       savebutton_Callback(handles.savebutton, eventdata, handles);
-%    end
-% end
-%uiresume(handles.figure1);
-
-
-% --- Executes on button press in undobutton.
 function undobutton_Callback(hObject, eventdata, handles)
-% hObject    handle to undobutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 
 if isempty(handles.undolist)
   msgbox('No actions to undo.','Undo');

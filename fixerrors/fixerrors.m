@@ -22,8 +22,19 @@ end
 moviename = fullfile(moviepath,movienameS);
 Fix.cfgSetProp('moviename',moviename);
 
+%% Trx
+HELPMSG = sprintf('Choose trx file containing trajectories for movie %s.',...
+  moviename);
+trxname = fullfile(moviepath,'registered_trx.mat');
+[trxnameS,trxpath] = uigetfilehelp({'*.mat'},'Choose trx file',trxname,...
+  'helpmsg',HELPMSG);
+if isequal(trxnameS,0)
+  return;
+end
+trxname = fullfile(trxpath,trxnameS);
+  
 %% Look for restart file
-savedProgFiles = Fix.findSavedProgFiles(moviename);
+savedProgFiles = Fix.findSavedProgFiles(moviename,trxname);
 tfRestart = false;
 restartFile = [];
 restartContents = [];
@@ -31,9 +42,10 @@ if ~isempty(savedProgFiles)
   liststr = [{'<Don''t restart, start fresh>'};savedProgFiles(:)];
   [sel,ok] = listdlg('ListString',liststr,...
     'SelectionMode','single',...
+    'ListSize',[650 300],...
     'Name','Restart saved progress',...
     'PromptString','Saved progress found for this movie. Restart?',...
-    'OKString','Restart with selected file');
+    'OKString','Select');
   if ok==0
     return;
   end
@@ -47,11 +59,17 @@ if ~isempty(savedProgFiles)
         'Moviename in restart file (%s) does not match selected movie (%s).',...
         restartContents.moviename,moviename);
     end
+    if ~strcmp(restartContents.matname,trxname)
+      error('fixerrors:restart',...
+        'Trxname in restart file (%s) does not match selected trxname (%s).',...
+        restartContents.matname,trxname);
+    end    
     
     % Confirm restart with stored trxfile
-    qstr = sprintf('Restart file contents:\nmovie: %s\ntrx: %s\n.',...
-      restartContents.moviename,restartContents.matname);
-    resp = questdlg(qstr,'Confirm restart','OK, Restart','Cancel','OK, Restart');
+%     qstr = sprintf('Restart file contents:\nmovie: %s\ntrx: %s\n.',...
+%       restartContents.moviename,restartContents.matname);
+%     resp = questdlg(qstr,'Confirm restart','OK, Restart','Cancel','OK, Restart');
+    resp = 'OK, Restart';
     if isempty(resp)
       resp = 'Cancel';
     end
@@ -66,33 +84,19 @@ if ~isempty(savedProgFiles)
   end
 end
 
-%% Set: seqs, trx, annname, params, trxname, trxnameS, undolist
+%% Set: seqs, trx, annname, params, undolist, doneseqs
 if tfRestart
   seqs = restartContents.seqs;
   trx = restartContents.trx;
   annname = restartContents.annname;
   params = restartContents.params;
-  trxname = restartContents.matname;
   undolist = restartContents.undolist;
-  
-  [~,trxnameS,ext] = fileparts(trxname);
-  trxnameS = [trxnameS ext];
-  
+  doneseqs = restartContents.doneseqs;
+    
   % legacy
   assert(~isfield(trx,'f2i'));
   assert(isfield(trx,'off'));  
 else
-    
-  %% Trx
-  HELPMSG = sprintf('Choose trx file containing trajectories for movie %s.',...
-    moviename);
-  trxname = fullfile(moviepath,'registered_trx.mat');
-  [trxnameS,trxpath] = uigetfilehelp({'*.mat'},'Choose trx file',trxname,...
-    'helpmsg',HELPMSG);
-  if isequal(trxnameS,0)
-    return;
-  end
-  trxname = fullfile(trxpath,trxnameS);
   annname = fullfile(trxpath,'READANN_DUMMY');
 
   [seqs,trx,params] = suspicious_sequences(trxname,annname,...
@@ -100,6 +104,7 @@ else
     'maxmajorfrac',nan,'minwalkvel',nan,...
     'matcherrclose',nan,'minanglediff',nan);
   undolist = {};
+  doneseqs = [];
   if isempty(seqs)
     msgbox('No suspicious sequences found.');
     return;
@@ -221,17 +226,10 @@ end
 
 %% Call fixerrorsgui
 
-saveProgFile = Fix.createSavedProgFilename(movienameS,trxnameS);
-saveProgFile = fullfile(moviepath,saveProgFile);
-fprintf('Movie: %s\n',moviename);
-fprintf('Trx: %s\n',trxname);
-fprintf('Temporary progress file will be created at: %s\n',saveProgFile);
-
 if ~isfield(seqs,'status')
   [seqs.status] = deal(SeqStatus.UNKNOWN);
 end
 
-readfrm = struct();
-[readfrm.readframe,readfrm.nframes,readfrm.fid] = get_readframe_fcn(moviename);
-fixerrorsgui(seqs,moviename,trx,annname,params,trxname,saveProgFile,...
-  readfrm,undolist);
+fprintf('Movie: %s\n',moviename);
+fprintf('Trx: %s\n',trxname);
+fixerrorsgui(seqs,moviename,trx,annname,params,trxname,undolist,doneseqs);
