@@ -20,7 +20,8 @@ On startup, you will be asked to specify the following files/information:
 
 * Specify the (tracked) movie that is to be examined/fixed.
 * Specify the (Duotrax-generated) trxfile, eg 'registered_trx.mat', for the movie.
-* **You no longer need to specify the Duotrax-generated 'roidata.mat' file.** However, in the same directory as your registered_trx.mat file, there must be the following DuoTrax-generated files:
+* (Optional) If you saved progress previously, you will have the option of restarting previous work at this point.
+* In the same directory as your registered_trx.mat file, there must be the following DuoTrax-generated files:
     1. roidata.mat
     2. trackingdata.mat
     3. bgdata.mat
