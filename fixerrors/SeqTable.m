@@ -38,6 +38,12 @@ classdef SeqTable < handle
     
     function setSeqData(obj,seqs)
       t = struct2table(seqs);
+      % struct2table MATLABism. t.frames will be a cell if seqs.frames
+      % contains arrays of varying length; will be numeric if seqs.frames
+      % are row vecs of same size.
+      if isnumeric(t.frames)
+        t.frames = num2cell(t.frames);
+      end
       jt = obj.jtable;
       
       startframe = cellfun(@(x)x(1),t.frames);

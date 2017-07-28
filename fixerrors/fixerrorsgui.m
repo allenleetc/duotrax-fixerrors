@@ -194,6 +194,7 @@ playstopbutton_Callback(handles.playstopbutton,[],handles);
 
 function InitializeKeyPressFcns(handles)
 h = findobj(handles.figure1,'KeyPressFcn','');
+h = findobj(h,'-not','tag','frameedit');
 set(h,'KeyPressFcn',get(handles.figure1,'KeyPressFcn'));
 
 
