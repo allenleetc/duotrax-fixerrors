@@ -1,64 +1,38 @@
-function fix_SetErrorTypes(handles)
-% set "next error type" menu values based on remaining suspicious sequences
-% splintered from fixerrorsgui 6/23/12 JAB
+function [tfdone,nexttype] = fix_SetErrorTypes(handles)
+% * Find remaining uncorrected seqs in handles.seqs
+% * Set nexterrortype menu based on remaining seqs
+% * Set pbCorrect string based on done-ness
+% 
+% tfdone: scalar logical. if true, there are no remaining seqs
+% nexttype: char. Next type to consider. Indeterminate if tfdone==true.
 
-isbirth = false; isdeath = false;
-isswap = false; isjump = false;
-isorientchange = false; isorientvelmismatch = false;
-islargemajor = false; istouch = false;
-isuser = false;
-for i = 1:length(handles.seqs),
-  if handles.seqs(i).status==SeqStatus.UNKNOWN
-    eval(sprintf('is%s = true;',handles.seqs(i).type));
-  end
-end
-s = {};
-if isbirth,
-  s{end+1} = 'Track Birth';
-end
-if isdeath
-  s{end+1} = 'Track Death';
-end
-if isswap,
-  s{end+1} = 'Match Cost Ambiguity';
-end
-if istouch
-  s{end+1} = 'Is Touching';
-end
-if isuser
-  s{end+1} = 'User Defined';
-end
-if isjump,
-  s{end+1} = 'Large Jump';
-end
-if isorientchange,
-  s{end+1} = 'Large Change in Orientation';
-end
-if isorientvelmismatch,
-  s{end+1} = 'Velocity & Orient. Mismatch';
-end
-if islargemajor,
- s{end+1} = 'Large Major Axis';
-end
-content = get(handles.nexterrortypemenu,'string');
-v = get(handles.nexterrortypemenu,'value');
-if v > length(content),
-  set(handles.nexterrortypemenu,'value',length(content));
-  v = length(content);
-end
-sel = content{v};
-if isempty(s),
-  set(handles.nexterrortypemenu,'string','No more errors','value',1);
-  set(handles.correctbutton,'string','Finish');
+seqs = handles.seqs(:);
+tf = [seqs.status]'==SeqStatus.UNKNOWN;
+szassert(tf,size(seqs));
+seqsRemain = seqs(tf);
+typesRemain = unique({seqsRemain.type}','stable');
+prettytypesRemain = cellfun(@SeqTypes.type2pretty,typesRemain,'uni',0);
+
+pumNET = handles.nexterrortypemenu;
+pbCorrect = handles.correctbutton;
+selOrig = getListControlSelection(pumNET);
+
+if isempty(prettytypesRemain)
+  set(pumNET,'String','No more errors','Value',1,'UserData',[]);
+  pbCorrect.Enable = 'off';
+  %set(pbCorrect,'String','Finish');
+  tfdone = true;
+  nexttype = [];
 else
-  set(handles.nexterrortypemenu,'string',s);
-  set(handles.correctbutton,'string','Correct');
-  i = find(strcmpi(sel,s));
-  if ~isempty(i),
-    set(handles.nexterrortypemenu,'value',i);
+  i = find(strcmpi(selOrig,prettytypesRemain));
+  if ~isempty(i)
+    val = i;
   else
-    if length(s) >= v,
-      set(handles.nexterrortypemenu,'value',min(v,length(s)));
-    end
+    val = min(pumNET.Value,length(prettytypesRemain));
   end
+  set(pumNET,'Value',val,'String',prettytypesRemain,'UserData',typesRemain);
+  pbCorrect.Enable = 'on';
+  %pbCorrect.String = 'Correct';
+  tfdone = false;
+  nexttype = typesRemain{val};
 end

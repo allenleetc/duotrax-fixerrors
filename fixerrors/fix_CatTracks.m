@@ -3,13 +3,18 @@ function trk1 = fix_CatTracks(trk1,trk2)
 % does not copy all fields -- convert_units must be re-run on the output track
 % splintered from fixerrorsgui 6/21/12 JAB
 
-assert(isequal(fieldnames(trk1),fieldnames(trk2)));
+flds = fieldnames(trk1);
+assert(isequal(flds,fieldnames(trk2)));
+
+tf = strncmp(flds,'susp',4);
+fldsSusp = flds(tf);
 
 n = trk2.nframes;
 
 fldsTS = Fix.FLDS_TIMESERIESDATA;
 fldsMatch = Fix.FLDS_MATCH;
-fldsUnk = setdiff(fieldnames(trk1),Fix.FLDS_ALLKNOWN);
+fldsKnown = [Fix.FLDS_ALLKNOWN; fldsSusp];
+fldsUnk = setdiff(flds,fldsKnown);
 for f=fldsTS(:)',f=f{1}; %#ok<FXSET>
   if isfield(trk1,f)
     trk1.(f)(end+1:end+n) = trk2.(f);

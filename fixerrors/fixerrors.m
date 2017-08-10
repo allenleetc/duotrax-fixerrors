@@ -1,4 +1,4 @@
-function fixerrors
+function fixerrors(varargin)
 
 %% path
 mpath = mfilename('fullpath');
@@ -6,6 +6,9 @@ mpath = fileparts(mpath);
 addpath(mpath);
 addpath(fullfile(mpath,'JavaTableWrapper'));
 setuppath;
+
+[includeTouch] = myparse(varargin,...
+  'includeTouch',false);
 
 %% Movie
 MOVIEEXTS = {'*.avi','*.fmf','*.sbfmf','*.ufmf'}';
@@ -102,7 +105,9 @@ else
   [seqs,trx,params] = suspicious_sequences(trxname,annname,...
     'minerrjumpfrac',nan,'minorientchange',nan,...
     'maxmajorfrac',nan,... % 'minwalkvel',nan
-    'matcherrclose',nan,'minanglediff',nan);
+    'matcherrclose',nan,'minanglediff',nan,...
+    'doistouching',includeTouch);
+  
   undolist = {};
   doneseqs = [];
   if isempty(seqs)

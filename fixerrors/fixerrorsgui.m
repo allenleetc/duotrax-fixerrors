@@ -552,10 +552,8 @@ fix_SetCreatedObjectBgColor( hObject, 'white' );
 function correctbutton_Callback(hObject, eventdata, handles)
 
 handles.undolist{end+1} = {'correct',handles.seqi,handles.seqs(handles.seqi)};
-
 handles.seqs(handles.seqi).status = SeqStatus.CORRECT;
 handles.seqs(handles.seqi).statusTS = now;
-
 if isempty(handles.doneseqs)
   handles.doneseqs = handles.seqs(handles.seqi);
 else
@@ -567,69 +565,67 @@ handles.seqs = check_suspicious_sequences(handles.trx,handles.annname,...
 
 handles.seqTable.setSeqData(handles.seqs);
 
-fix_SetErrorTypes(handles);
+[tfdone,nexttype] = fix_SetErrorTypes(handles);
 
-% % quit if this is the last sequence
-% if strcmpi(get(handles.correctbutton,'string'),'finish')
-%   msgbox('All suspicious sequences have been corrected. Quitting.','All Done');
-%   savebutton_Callback(hObject, [], handles);
-%   uiresume(handles.figure1);
-%   return;
-% end
+if tfdone
+  handles = needsSave(handles);
+  guidata(hObject,handles);
+  msgbox('All suspicious sequences marked as Correct.','Done');
+  return;
+end
 
-s = lclGetPUMContents(handles.nexterrortypemenu);
-
-% what is the next type of error
-type_list = nexterrortype_type();
-nexttype = type_list{strcmpi(type_list(:,1),s),2};
 flies = [];
-frames = [];
+frm1s = [];
 susp = [];
 idx = [];
-
-% find an error of type nexttype
-for i = 1:length(handles.seqs)
-  if strcmpi(handles.seqs(i).type,nexttype) && handles.seqs(i).status==SeqStatus.UNKNOWN
+tf2flies = strcmpi(nexttype,'swap') || strcmpi(nexttype,'touch') || ...
+           strncmpi(nexttype,'user',4);
+for i = 1:numel(handles.seqs)
+  seq = handles.seqs(i);
+  if strcmpi(seq.type,nexttype) && seq.status==SeqStatus.UNKNOWN
     % store frames, flies, suspiciousness for this seq
-    if strcmpi(nexttype,'swap') || strcmpi(nexttype,'touch') || strcmpi(nexttype,'user')
-      flies(end+1) = handles.seqs(i).flies(1)*handles.nflies+handles.seqs(i).flies(2); %#ok<AGROW>
+    if tf2flies
+      assert(numel(seq.flies)==2);
+      flies(end+1) = seq.flies(1)*handles.nflies + seq.flies(2); %#ok<AGROW>
     else
-      flies(end+1) = handles.seqs(i).flies; %#ok<AGROW>
+      assert(isscalar(seq.flies));
+      flies(end+1) = seq.flies; %#ok<AGROW>
     end
-    frames(end+1) = handles.seqs(i).frames(1); %#ok<AGROW>
-    susp(end+1) = max(handles.seqs(i).suspiciousness); %#ok<AGROW>
+    frm1s(end+1) = seq.frames(1); %#ok<AGROW>
+    susp(end+1) = max(seq.suspiciousness); %#ok<AGROW>
     idx(end+1) = i; %#ok<AGROW>
   end
 end
-
-if isempty(flies)
-  keyboard;
-end
+assert(~isempty(flies));
 
 % choose error of this type if there are more than one
-sortby = lclGetPUMContents(handles.sortbymenu);
-if strcmpi(sortby,'suspiciousness')
-  j = argmax(susp);
-  handles = fix_SetSeq(handles,idx(j));
-elseif strcmpi(sortby,'frame number')
-  j = argmin(frames);
-  handles = fix_SetSeq(handles,idx(j));
-elseif strcmpi(sortby,'fly')
-  seq = handles.seqs(handles.seqi);
-  if strcmpi(seq.type,'swap') || strcmpi(seq.type,'touch')
-    currfly = seq.flies(1)*handles.nflies + seq.flies(2);
-  else
-    currfly = seq.flies;
-  end
-  issamefly = flies==currfly;
-  if any(issamefly)
-    nextfly = currfly;
-  else
-    nextfly = min(flies);
-  end
-  nextflies = find(flies==nextfly);
-  j = nextflies(argmin(frames(nextflies)));
-  handles = fix_SetSeq(handles,idx(j));
+sortby = getListControlSelection(handles.sortbymenu);
+switch lower(sortby)
+  case 'suspiciousness'
+    j = argmax(susp);
+    handles = fix_SetSeq(handles,idx(j));
+  case 'frame number'
+    j = argmin(frm1s);
+    handles = fix_SetSeq(handles,idx(j));
+  case 'fly'
+    seq = handles.seqs(handles.seqi);
+    if strcmpi(seq.type,'swap') || strcmpi(seq.type,'touch') || ...
+       strncmpi(seq.type,'user',4)
+      currfly = seq.flies(1)*handles.nflies + seq.flies(2);
+    else
+      currfly = seq.flies;
+    end
+    issamefly = flies==currfly;
+    if any(issamefly)
+      nextfly = currfly;
+    else
+      nextfly = min(flies);
+    end
+    nextflies = find(flies==nextfly); % indices into flies/idx/etc
+    j = nextflies(argmin(frm1s(nextflies)));
+    handles = fix_SetSeq(handles,idx(j));
+  otherwise
+    assert(false);
 end
 
 handles = needsSave(handles);
@@ -2772,12 +2768,3 @@ handles.txUnsavedChanges.Visible = 'off';
 function cbkSelectSeq(pnlSeq,irow)
 handles = guidata(pnlSeq);
 gotoseq(handles,irow); % updates handles
-
-function s = lclGetPUMContents(h)
-contents = get(h,'string');
-v = get(h,'value');
-if v > length(contents)
-  set(h,'value',length(contents));
-  v = length(contents);
-end
-s = contents{v};

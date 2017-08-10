@@ -1,10 +1,10 @@
 function [suspicious,dataperfly,params] = suspicious_sequences(matname,annname,varargin)
 
 [MINERRJUMPFRAC,CLOSELENGTH,MINORIENTCHANGE,MAXMAJORFRAC,MINWALKVEL,MATCHERRCLOSE,...
-  MINANGLEDIFF,MAXDISTCLOSEFRAC,douserseqs] = ...
+  MINANGLEDIFF,MAXDISTCLOSEFRAC,douserseqs,doistouching] = ...
   myparse(varargin,'minerrjumpfrac',.2,'closelength',20,'minorientchange',pi/4,...
   'maxmajorfrac',2/3,'minwalkvel',1,'matcherrclose',10,'minanglediff',pi/2,...
-  'maxdistclosefrac',2,'douserseqs',1);
+  'maxdistclosefrac',2,'douserseqs',1,'doistouching',0);
 
 %% load data
 if ~ischar(matname)
@@ -233,25 +233,37 @@ for i = 1:cols(swappairs),
 end
 
 %% find istouching
-fprintf('detecting istouching...\n');
-assert(isvector(istouching) && numel(istouching)==nframes);
-istouching = imclose(istouching,se);
-[starts,ends] = get_interval_ends(istouching);
-for j = 1:length(starts)
-  idx = starts(j):ends(j)-1;
-  addsequence([1 2],'touch',idx,ones(size(idx)));
+if doistouching
+  fprintf('detecting istouching...\n');
+  assert(isvector(istouching) && numel(istouching)==nframes);
+  istouching = imclose(istouching,se);
+  [starts,ends] = get_interval_ends(istouching);
+  for j = 1:length(starts)
+    idx = starts(j):ends(j)-1;
+    addsequence([1 2],'touch',idx,ones(size(idx)));
+  end
 end
 
 %% user-defined seqs
-if douserseqs && isfield(dataperfly,'susp')
-  fprintf('detecting user-set suspiciousness...\n');
-  usersusp = getstructarrayfield(dataperfly,'susp');
-  assert(size(usersusp,1)==2);
-  usersusp = any(logical(usersusp),1);
-  [starts,ends] = get_interval_ends(usersusp);
-  for j = 1:length(starts)
-    idx = starts(j):ends(j)-1;
-    addsequence([1 2],'user',idx,ones(size(idx)));
+if douserseqs
+  trxflds = fieldnames(dataperfly);
+  tfuser = strncmpi(trxflds,'susp',4);
+  nuser = nnz(tfuser);
+  if nuser>0
+    fprintf('found %d user-defined suspiciousness fields...\n',nuser);
+    fldsuser = trxflds(tfuser);
+    for fld=fldsuser(:)',fld=fld{1}; %#ok<FXSET>
+      fprintf('  detecting %s...\n',fld);
+      usersusp = getstructarrayfield(dataperfly,fld);
+      assert(size(usersusp,1)==2);
+      usersusp = any(logical(usersusp),1);
+      [starts,ends] = get_interval_ends(usersusp);
+      type = ['user' fld(5:end)];
+      for j = 1:length(starts)
+        idx = starts(j):ends(j)-1;
+        addsequence([1 2],type,idx,ones(size(idx)));
+      end
+    end
   end
 end
 
@@ -384,31 +396,23 @@ for fly = 1:nflies,
 
 end
 
-%% make a fake sequence so fixerrors doesn't exit
-% if isempty( suspicious )
-%    fprintf( 1, '...adding a fake track birth to prevent exit\n' )
-%    addsequence( 1, 'birth', 1, 1 );
-% end
-
 params = {'minerrjumpfrac',MINERRJUMPFRAC,'closelength',CLOSELENGTH,...
   'minorientchange',MINORIENTCHANGE,...
   'maxmajorfac',MAXMAJORFRAC,'minwalkvel',MINWALKVEL,...
   'matcherrclose',MATCHERRCLOSE,'minanglediff',MINANGLEDIFF};
 
-%% addsequence updates the suspicious data structure
   function addsequence(flies,type,frames,suspiciousness)
-
-    newevent = struct('flies',flies,'type',type,'frames',frames,'suspiciousness',suspiciousness);
+    newevent = struct('flies',flies,'type',type,'frames',frames,...
+      'suspiciousness',suspiciousness);
     if isempty(suspicious),
       suspicious = newevent;
     else
       suspicious(end+1) = newevent;
     end
-    
   end
 
   function v = isdummytrx(trk)
     v = isnan(trk.firstframe);
   end
 
-end % end main function
+end
