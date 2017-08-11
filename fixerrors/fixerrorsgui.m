@@ -293,7 +293,7 @@ hleft = plot(0,0,'o','markersize',6,'color',color,'markerfacecolor','w');
 set(hleft,'buttondownfcn','fixerrorsgui(''left_buttondown'',gcbo,[],guidata(gcbo))');
 hright = plot(0,0,'o','markersize',6,'color',color,'markerfacecolor','w');
 set(hright,'buttondownfcn','fixerrorsgui(''right_buttondown'',gcbo,[],guidata(gcbo))');
-hhead = plot(0,0,'o','markersize',6,'color',color,'markerfacecolor','r');
+hhead = plot(0,0,'o','markersize',16,'color',color,'markerfacecolor','r');
 set(hhead,'buttondownfcn','fixerrorsgui(''head_buttondown'',gcbo,[],guidata(gcbo))');
 htail = plot(0,0,'o','markersize',6,'color',color,'markerfacecolor','w');
 set(htail,'buttondownfcn','fixerrorsgui(''tail_buttondown'',gcbo,[],guidata(gcbo))');
