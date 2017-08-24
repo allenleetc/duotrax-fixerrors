@@ -98,11 +98,11 @@ for iseq = 1:length(handles.seqs),
   end
 end
 if ~isseqleft
-  handles.doneseqs = [];
-  guidata(hObject,handles);
-  msgbox('No suspicious sequences to be corrected. Exiting. ','All Done');
-  uiresume(handles.figure1);
-  return
+  %handles.doneseqs = [];
+  %guidata(hObject,handles);
+  msgbox('No suspicious sequences to be corrected.');
+%   uiresume(handles.figure1);
+%   return
 end
 handles.flipud = 0;
 handles.show_dead = 0;
