@@ -116,9 +116,10 @@ handles.plotpath = 'All Flies';
 handles.nframesplot = 101;
 handles.zoommode = 'Whole Arena';
 handles = needsSaveReset(handles);
-handles.isplaying = false;
-handles.MaxFPS = 40;
-handles.MinSPF = 1/handles.MaxFPS;
+setappdata(hObject,'isplaying',false); % perf optim, use appdata for isplaying flag
+%handles.isplaying = false;
+% handles.MaxFPS = 1e4;
+% handles.MinSPF = 1/handles.MaxFPS;
 
 handles.bgthresh = 10;
 %handles.lighterthanbg = 1;
@@ -2655,15 +2656,9 @@ f1 = min(handles.nframes,seq.frames(end)+SEQDF);
 lclSetFrame(handles,f1);
 
 function pbPlay_Callback(hObject, eventdata, handles)
-play(hObject,handles,handles.f,handles.nframes,[],...
-  'speedfac',0.35,'speedfacseq',0.35);
-function pbPlayFast_Callback(hObject, eventdata, handles)
-play(hObject,handles,handles.f,handles.nframes,[],...
-  'speedfac',inf,'speedfacseq',0.5);
+play(hObject,handles,handles.f,handles.nframes,[]);
 function pbBack_Callback(hObject, eventdata, handles)
-play(hObject,handles,handles.f,1,[],'speedfac',0.35,'speedfacseq',0.35);
-function pbBackFast_Callback(hObject, eventdata, handles)
-play(hObject,handles,handles.f,1,[],'speedfac',inf,'speedfacseq',0.5);
+play(hObject,handles,handles.f,1,[]);
 function playstopbutton_Callback(hObject, eventdata, handles)
 seq = handles.seqs(handles.seqi);
 f1 = max(1,seq.frames(1)-10);
@@ -2687,17 +2682,19 @@ function play(hObject,handles,f1,f2,fend,varargin)
 % reset.
 
 oc = onCleanup(@()playcleanup(hObject,handles));
-if ~handles.isplaying
+hFig = ancestor(hObject,'figure');
+isplaying = getappdata(hFig,'isplaying');
+if ~isplaying
   hObject.UserData = struct('String',hObject.String,...
     'BackgroundColor',hObject.BackgroundColor);
   set(hObject,'String','Stop','BackgroundColor',[.5,0,0]);
-  handles.isplaying = true;
-  guidata(hObject,handles);
-  playcore(hObject,handles,f1,f2,fend,varargin{:});
+  setappdata(hFig,'isplaying',true);
+  handles = playcore(hObject,handles,f1,f2,fend,varargin{:});
+  % xxx handles guidata handles.f
 end
 function playcleanup(hObject,handles)
 % Gets called twice at a "stop" but that's fine
-handles.isplaying = false;
+setappdata(ancestor(hObject,'figure'),'isplaying',false);
 % playcore does not update guidata, to avoid collisions with stop; read
 % current frame from controls to update handles.f
 handles.f = str2double(handles.frameedit.String);
@@ -2707,12 +2704,12 @@ fix_PlotFrame(handles);
 ud = hObject.UserData;
 set(hObject,'String',ud.String,'BackgroundColor',ud.BackgroundColor);
 
-function playcore(hObject,handles,f1,f2,fend,varargin)
+function handles = playcore(hObject,handles,f1,f2,fend,varargin)
 % No modifications to guidata.
 
-[speedfac,speedfacseq] = myparse(varargin,...
-  'speedfac',1.0,...
-  'speedfacseq',1.0);
+[speedfacseq] = myparse(varargin,...
+  'speedfacseq',1.0); % scale playback speed at this factor during seqs
+tfSeqSpeedDiff = speedfacseq~=1.0;
 
 if f1<=f2
   frmsPlay = f1:f2;
@@ -2721,13 +2718,18 @@ else
 end
 tfReset = ~isempty(fend);
 
-maxnonseq = isinf(speedfac);
-minSPF = handles.MinSPF/speedfac;
-minSPFseq = handles.MinSPF/speedfacseq;
+playbackFPS = getpref('DTFE','playbackFPS',20);
+playbackMax = playbackFPS<=0;
+playbackSPF = 1/playbackFPS;
+playbackSPFseq = playbackSPF/speedfacseq;
+hFig = ancestor(hObject,'figure');
+% maxnonseq = isinf(speedfac);
+% minSPF = playbackSPF/speedfac;
 tic;
 for f = frmsPlay
-  handles = guidata(hObject);
-  if ~handles.isplaying
+  %handles = guidata(hObject);
+  isplaying = getappdata(hFig,'isplaying');
+  if ~isplaying
     break;
   end
   
@@ -2735,24 +2737,26 @@ for f = frmsPlay
   fix_SetFrameNumber(handles);
   fix_PlotFrame(handles);
   % Note, handles.f not updated in guidata
-  drawnow;
+  %drawnow;
   
-  if handles.frmIsSeq(f)
-    dtFrm = toc;
-    pauseTime = minSPFseq - dtFrm; % could be negative
-  elseif ~maxnonseq
-    dtFrm = toc;
-    pauseTime = minSPF - dtFrm; % etc
-  else
+  if playbackMax
     pauseTime = 0;
+  elseif tfSeqSpeedDiff && handles.frmIsSeq(f)
+    dtFrm = toc;
+    pauseTime = playbackSPFseq - dtFrm; % could be negative
+  else
+    dtFrm = toc;
+    pauseTime = playbackSPF - dtFrm; % etc
   end
   if pauseTime>0
     pause(pauseTime);
+  else
+    drawnow;
   end
   tic;
 end
 
-if handles.isplaying && tfReset % don''t reset if stopped/canceled
+if isplaying && tfReset % don't reset if stopped/canceled
   handles.f = fend;
   fix_SetFrameNumber(handles);
   fix_PlotFrame(handles);
@@ -2768,3 +2772,13 @@ handles.txUnsavedChanges.Visible = 'off';
 function cbkSelectSeq(pnlSeq,irow)
 handles = guidata(pnlSeq);
 gotoseq(handles,irow); % updates handles
+
+function menu_file_prefs_Callback(hObject, eventdata, handles)
+fps = getpref('DTFE','playbackFPS',20);
+resp = inputdlg('Playback FPS','Set Preferences',[1 35],{num2str(fps)});
+if ~isempty(resp)
+  fps = str2double(resp{1});
+  if ~isnan(fps)
+    setpref('DTFE','playbackFPS',fps);
+  end  
+end
