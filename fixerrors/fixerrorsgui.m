@@ -2691,8 +2691,7 @@ if ~isplaying
     'BackgroundColor',hObject.BackgroundColor);
   set(hObject,'String','Stop','BackgroundColor',[.5,0,0]);
   setappdata(hFig,'isplaying',true);
-  handles = playcore(hObject,handles,f1,f2,fend,varargin{:});
-  % xxx handles guidata handles.f
+  playcore(hObject,handles,f1,f2,fend,varargin{:});
 end
 function playcleanup(hObject,handles)
 % Gets called twice at a "stop" but that's fine
@@ -2706,7 +2705,7 @@ fix_PlotFrame(handles);
 ud = hObject.UserData;
 set(hObject,'String',ud.String,'BackgroundColor',ud.BackgroundColor);
 
-function handles = playcore(hObject,handles,f1,f2,fend,varargin)
+function playcore(hObject,handles,f1,f2,fend,varargin)
 % No modifications to guidata.
 
 [speedfacseq] = myparse(varargin,...
@@ -2735,7 +2734,10 @@ for f = frmsPlay
     break;
   end
   
-  handles.f = f;
+  handles.f = f; % ONLY FOR INTERNAL use, this change is not 
+  % output/propagated to caller via guidata. Caller will call playcleanup 
+  % to update handles.f.
+
   fix_SetFrameNumber(handles);
   fix_PlotFrame(handles);
   % Note, handles.f not updated in guidata
@@ -2777,7 +2779,8 @@ gotoseq(handles,irow); % updates handles
 
 function menu_file_prefs_Callback(hObject, eventdata, handles)
 fps = getpref('DTFE','playbackFPS',20);
-resp = inputdlg('Playback FPS','Set Preferences',[1 35],{num2str(fps)});
+resp = inputdlg('Playback FPS (0 for maximum playback speed)',...
+  'Set Preferences',[1 45],{num2str(fps)});
 if ~isempty(resp)
   fps = str2double(resp{1});
   if ~isnan(fps)
