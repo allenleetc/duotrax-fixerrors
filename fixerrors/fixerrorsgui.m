@@ -741,6 +741,8 @@ handles = saveProgress(handles,now());
 guidata(hObject,handles);
 
 function handles = saveProgress(handles,timestamp)
+% Important: savename is always located immediately under handles.matname,
+% ie progress file is always located alongside original trxfile
 savename = Fix.createSavedProgFilename(handles.moviename,handles.matname,timestamp);
 SAVEFLDS = {'trx' 'undolist' 'seqs' 'doneseqs' 'moviename' 'seqi' ...
   'params' 'matname' 'annname'};

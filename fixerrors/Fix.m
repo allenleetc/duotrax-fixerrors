@@ -76,6 +76,8 @@ classdef Fix
   methods (Static)
     
     function savename = createSavedProgFilename(moviename,trxname,ts)
+      % IMPORTANT FACT: savename is always located immediately under trxpath
+      
       if exist('ts','var')==0
         ts = now;
       end
@@ -91,15 +93,18 @@ classdef Fix
     end
     
     function savedProgFiles = findSavedProgFiles(moviename,trxname)
-      [moviepath,movienameS] = fileparts2(moviename);
-      [~,trxnameS] = fileparts2(trxname);
-      dd = dir(fullfile(moviepath,'*.mat'));
+      % savedProgFiles: cellstr of matfiles (strictly) alongside trxname
+      % (ie in trxpath) that match progress-file pattern
+      
+      [~,movienameS] = fileparts2(moviename);
+      [trxpath,trxnameS] = fileparts2(trxname);
+      dd = dir(fullfile(trxpath,'*.mat'));
       mats = {dd.name}';
       PAT = sprintf('dtfeSavedProg@%s@%s@[0-9]{8,8}T[0-9]{6,6}.mat$',...
         movienameS,trxnameS);
       tf = cellfun(@(x)~isempty(regexp(x,PAT,'once')),mats);
       mats = mats(tf);      
-      savedProgFiles = cellfun(@(x)fullfile(moviepath,x),mats,'uni',0);
+      savedProgFiles = cellfun(@(x)fullfile(trxpath,x),mats,'uni',0);
     end
     
   end

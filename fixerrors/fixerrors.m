@@ -39,7 +39,6 @@ trxname = fullfile(trxpath,trxnameS);
 %% Look for restart file
 savedProgFiles = Fix.findSavedProgFiles(moviename,trxname);
 tfRestart = false;
-restartFile = [];
 restartContents = [];
 if ~isempty(savedProgFiles)
   liststr = [{'<Don''t restart, start fresh>'};savedProgFiles(:)];
@@ -56,42 +55,72 @@ if ~isempty(savedProgFiles)
   if tfRestart
     restartFile = liststr{sel};
     restartContents = load(restartFile);
+    restartPath = fileparts2(restartFile);
     fprintf(1,'Loaded restart file %s...\n',restartFile);
-    if ~strcmp(restartContents.moviename,moviename)
-      error('fixerrors:restart',...
-        'Moviename in restart file (%s) does not match selected movie (%s).',...
-        restartContents.moviename,moviename);
-    end
-    if ~strcmp(restartContents.matname,trxname)
-      error('fixerrors:restart',...
-        'Trxname in restart file (%s) does not match selected trxname (%s).',...
-        restartContents.matname,trxname);
-    end    
     
-    % Confirm restart with stored trxfile
-%     qstr = sprintf('Restart file contents:\nmovie: %s\ntrx: %s\n.',...
-%       restartContents.moviename,restartContents.matname);
-%     resp = questdlg(qstr,'Confirm restart','OK, Restart','Cancel','OK, Restart');
-    resp = 'OK, Restart';
-    if isempty(resp)
-      resp = 'Cancel';
+    % restart file was found by looking alongside trxfile, so it probably
+    % matches moviefile/trxfile. For safety, warn if something looks wrong.
+    warnstr = '';
+    if strcmp(restartContents.moviename,moviename)
+      tfWarn = false;
+    else
+      [~,restartMovienameS] = fileparts2(restartContents.moviename);
+      if strcmp(fullfile(restartPath,restartMovienameS),moviename)
+        % common case: mov/trx/restart files in same expdir, but expdir
+        % moved from previous working location
+        tfWarn = false;
+      else
+        tfWarn = true;
+        warnstr = sprintf('Moviename in restart file (%s) does not match selected movie (%s).',...
+          restartContents.moviename,moviename);
+      end
     end
-    switch resp
-      case 'OK, Restart'
-        % none, tfRestart, restartFile, restartContents all set.
-      case 'Cancel'
-        return;
-      otherwise
-        assert(false);
+    if strcmp(restartContents.matname,trxname)
+      % none
+    else
+      [~,restartTrxnameS] = fileparts2(restartContents.matname);
+      if strcmp(fullfile(restartPath,restartTrxnameS),trxname)
+        % common case: mov/trx/restart files in same expdir, etc
+        
+        % none
+      else
+        tfWarn = true;
+        warnstrtmp = sprintf('Trxfile in restart file (%s) does not match selected trxfile (%s).',...
+          restartContents.matname,trxname);
+        if isempty(warnstr)
+          warnstr = warnstrtmp;
+        else
+          warnstr = [warnstr ' ' warnstrtmp];
+        end
+      end
+    end
+    
+    if tfWarn
+      resp = questdlg(warnstr,'Potential movie/trxfile mismatch',...
+        'OK, Proceed','Cancel','Cancel');
+      if isempty(resp)
+        resp = 'Cancel';
+      end
+      switch resp
+        case 'Cancel'
+          return;
+        case 'OK, Proceed'
+          % none, tfRestart, restartContents are set. moviename and trxname
+          % will be used, not restartContents.moviename and
+          % restartContents.trxname.
+        otherwise
+          assert(false);
+      end
     end
   end
 end
 
 %% Set: seqs, trx, annname, params, undolist, doneseqs
+annname = fullfile(trxpath,'READANN_DUMMY');
 if tfRestart
   seqs = restartContents.seqs;
   trx = restartContents.trx;
-  annname = restartContents.annname;
+  %annname = restartContents.annname; 
   params = restartContents.params;
   undolist = restartContents.undolist;
   doneseqs = restartContents.doneseqs;
@@ -100,7 +129,6 @@ if tfRestart
   assert(~isfield(trx,'f2i'));
   assert(isfield(trx,'off'));  
 else
-  annname = fullfile(trxpath,'READANN_DUMMY');
 
   [seqs,trx,params] = suspicious_sequences(trxname,annname,...
     'minerrjumpfrac',nan,'minorientchange',nan,...
