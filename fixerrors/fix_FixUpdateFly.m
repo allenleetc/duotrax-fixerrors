@@ -20,6 +20,16 @@ a = 2*handles.trx(fly).a(i);
 b = 2*handles.trx(fly).b(i);
 theta = handles.trx(fly).theta(i);
 ellipseupdate(handles.hellipse(fly),a,b,x,y,theta);
+xwingl = handles.trx(fly).xwingl(i);
+ywingl = handles.trx(fly).ywingl(i);
+wingladj = 0.85*[xwingl-x ywingl-y]+[x y];
+xwingladj = wingladj(1);
+ywingladj = wingladj(2);
+xwingr = handles.trx(fly).xwingr(i);
+ywingr = handles.trx(fly).ywingr(i);
+wingradj = 1.15*[xwingr-x ywingr-y]+[x y];
+xwingradj = wingradj(1);
+ywingradj = wingradj(2);
 
 xleft = x - b*cos(theta+pi/2);
 yleft = y - b*sin(theta+pi/2);
@@ -35,7 +45,13 @@ set(handles.hleft(fly),'xdata',xleft,'ydata',yleft);
 set(handles.hright(fly),'xdata',xright,'ydata',yright);
 set(handles.hhead(fly),'xdata',xhead,'ydata',yhead);
 set(handles.htail(fly),'xdata',xtail,'ydata',ytail);
-set(handles.hcenter(fly),'xdata',x,'ydata',y);
+set(handles.hwingl(fly),'xdata',xwingladj,'ydata',ywingladj);
+set(handles.hwingr(fly),'xdata',xwingradj,'ydata',ywingradj);
+set(handles.hwinglinel(fly),'xdata',[x xwingladj],'ydata',[y ywingladj]);
+set(handles.hwingliner(fly),'xdata',[x xwingradj],'ydata',[y ywingradj]);
+
+we = handles.wingEditor;
+we.setFlyCenterMajorRad(fly,[x y],a/2);
 
 i0 = ii - floor((handles.nframesplot-1)/2);
 i1 = ii + handles.nframesplot - 1;

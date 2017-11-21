@@ -54,19 +54,24 @@ end
 
 if isfield(handles,'hpath'),
   for fly = 1:handles.nflies,
-     if length( handles.hpath ) < fly
-        fprintf( 1, 'error at fly %d: nflies %d; len hpath %d, len hcenter %d\n', fly, handles.nflies, length( handles.hpath ), length( handles.hcenter ) );
-        break
-     end
-    safeset(handles.hpath(fly),'color',handles.colors(fly,:));
-    safeset(handles.hpath(fly),'color',handles.colors(fly,:));
-    safeset(handles.htailmarker(fly),'color',handles.colors(fly,:));
-    safeset(handles.hellipse(fly),'color',handles.colors(fly,:));
-    safeset(handles.hleft(fly),'color',handles.colors(fly,:));
-    safeset(handles.hright(fly),'color',handles.colors(fly,:));
-    safeset(handles.hhead(fly),'color',handles.colors(fly,:));
-    safeset(handles.htail(fly),'color',handles.colors(fly,:));
-    safeset(handles.hcenter(fly),'color',handles.colors(fly,:));
+    if length( handles.hpath ) < fly
+      fprintf( 1, 'error at fly %d: nflies %d; len hpath %d, len hcenter %d\n', fly, handles.nflies, length( handles.hpath ), length( handles.hcenter ) );
+      break
+    end
+    clr = handles.colors(fly,:);
+    safeset(handles.hpath(fly),'color',clr);
+    safeset(handles.hpath(fly),'color',clr);
+    safeset(handles.htailmarker(fly),'color',clr);
+    safeset(handles.hellipse(fly),'color',clr);
+    safeset(handles.hleft(fly),'color',clr);
+    safeset(handles.hright(fly),'color',clr);
+    safeset(handles.hhead(fly),'color',clr);
+    safeset(handles.htail(fly),'color',clr);
+    safeset(handles.hcenter(fly),'color',clr);
+    safeset(handles.hwingl(fly),'color',clr);
+    safeset(handles.hwingr(fly),'color',clr);
+    safeset(handles.hwinglinel(fly),'color',clr);
+    safeset(handles.hwingliner(fly),'color',clr);
   end
 end
 

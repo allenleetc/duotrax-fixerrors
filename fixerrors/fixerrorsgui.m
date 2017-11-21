@@ -271,19 +271,33 @@ handles.hleft = zeros(size(handles.hellipse));
 handles.hright = zeros(size(handles.hellipse));
 handles.htailmarker = zeros(size(handles.hellipse));
 handles.hpath = zeros(size(handles.hellipse));
+handles.hwingl = zeros(size(handles.hellipse));
+handles.hwingr = zeros(size(handles.hellipse));
+handles.hwinglinel = zeros(size(handles.hellipse));
+handles.hwingliner = zeros(size(handles.hellipse));
 for fly = 1:handles.nflies,
   [handles.hellipse(fly),handles.hcenter(fly),handles.hhead(fly),...
     handles.htail(fly),handles.hleft(fly),handles.hright(fly),...
-    handles.htailmarker(fly),handles.hpath(fly)] = ...
+    handles.htailmarker(fly),handles.hpath(fly),...
+    handles.hwingl(fly),handles.hwingr(fly),...
+    handles.hwinglinel(fly),handles.hwingliner(fly)] = ...
     InitFly(handles.colors(fly,:));
   handles = fix_UpdateFlyPathVisible(handles);
+end
+
+handles.wingEditor = WingEditor(...
+  [handles.hwingl(:) handles.hwingr(:)],...
+  [handles.hwinglinel(:) handles.hwingliner(:)]);
+
+for fly=1:handles.nflies
   fix_FixUpdateFly(handles,fly);
 end
 
 fix_ZoomInOnSeq(handles);
 
 
-function [hellipse,hcenter,hhead,htail,hleft,hright,htailmarker,hpath] = InitFly(color)
+function [hellipse,hcenter,hhead,htail,hleft,hright,htailmarker,hpath,...
+  hwingl,hwingr,hwinglinel,hwingliner] = InitFly(color)
 
 hpath = plot(0,0,'.-','color',color,'hittest','off');
 htailmarker = plot([0,0],[0,0],'-','color',color,'hittest','off');
@@ -300,7 +314,10 @@ htail = plot(0,0,'o','markersize',6,'color',color,'markerfacecolor','w');
 set(htail,'buttondownfcn','fixerrorsgui(''tail_buttondown'',gcbo,[],guidata(gcbo))');
 hcenter = plot(0,0,'o','markersize',6,'color',color,'markerfacecolor','w');
 set(hcenter,'buttondownfcn','fixerrorsgui(''center_buttondown'',gcbo,[],guidata(gcbo))');
-
+hwingl = plot(0,0,'+','markersize',7,'color',color,'linewidth',2);
+hwingr = plot(0,0,'o','markersize',7,'color',color,'markerfacecolor',color);
+hwinglinel = plot(0,0,'-','color',color);
+hwingliner = plot(0,0,'-','color',color);
 
 function tail_buttondown(hObject,eventdata,handles)
 
@@ -1143,7 +1160,6 @@ function editmenu_CreateFcn(hObject, eventdata, handles)
 fix_SetCreatedObjectBgColor( hObject, 'white' );
 
 
-% --- Executes on button press in gobutton.
 function gobutton_Callback(hObject, eventdata, handles)
 % hObject    handle to gobutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1198,6 +1214,11 @@ elseif strcmpi( s, 'superpose tracks...' )
   handles.superposefirstfly = -1;
   set( handles.superposedoitbutton, 'visible', 'off' );
   set( handles.superposefirstflybutton, 'visible', 'on' );
+elseif strcmpi( s, 'adjust wings...' )
+  set( handles.pnlAdjustWings, 'visible', 'on' );
+  set( handles.pbAdjustWingsAcceptFrame,'enable','on' );
+  we = handles.wingEditor;
+  we.setActivated(true); % XXX WHEN UNACTIVATE
 else
   fprintf( 1, 'unknown action selected: %s\n', s )
 end
@@ -2350,63 +2371,63 @@ function addnewtrackdoitbutton_Callback(hObject, eventdata, handles)
 
 assert(false,'dtfe');
 
-new_id = 0;
-new_timestamp = -1;
-for fly = 1:length( handles.trx )
-  new_id = max( [handles.trx(fly).id + 1, new_id] );
-  if new_timestamp == -1 && ...
-      handles.trx(fly).firstframe <= handles.f && ...
-      handles.trx(fly).endframe >= handles.f
-    new_timestamp = handles.trx(fly).timestamps(handles.trx(fly).firstframe + handles.f - 1);
-  end
-end
-
-% fill in new fly
-fly = length( handles.trx ) + 1;
-handles.trx(fly).id = new_id;
-handles.trx(fly).timestamps = new_timestamp;
-handles.trx(fly).firstframe = handles.f;
-handles.trx(fly).off = -handles.trx(fly).firstframe + 1;
-handles.trx(fly).endframe = handles.f;
-handles.trx(fly).nframes = 1;
-handles.trx(fly).moviename = handles.trx(1).moviename;
-handles.trx(fly).arena = handles.trx(1).arena;
-handles.trx(fly).matname = handles.trx(1).matname;
-handles.trx(fly).pxpermm = handles.trx(1).pxpermm;
-handles.trx(fly).fps = handles.trx(1).fps;
-xlim = get( handles.mainaxes, 'xlim' );
-ylim = get( handles.mainaxes, 'ylim' );
-handles.trx(fly).x = mean( xlim );
-handles.trx(fly).y = mean( ylim );
-handles.trx(fly).theta = 0;
-handles.trx(fly).a = diff( xlim )/10;
-handles.trx(fly).b = diff( ylim )/30;
-handles.trx(fly).xpred = handles.trx(fly).x;
-handles.trx(fly).ypred = handles.trx(fly).y;
-handles.trx(fly).thetapred = handles.trx(fly).theta;
-handles.trx(fly).dx = 0;
-handles.trx(fly).dy = 0;
-handles.trx(fly).v = 0;
-
-% save to undo list
-handles.undolist{end+1} = {'addnew',fly};
-
-% draw
-handles.nflies = handles.nflies + 1;
-handles = fix_SetFlyColors(handles);
-[handles.hellipse(fly),handles.hcenter(fly),handles.hhead(fly),...
-  handles.htail(fly),handles.hleft(fly),handles.hright(fly),...
-  handles.htailmarker(fly),handles.hpath(fly)] = ...
-  InitFly(handles.colors(fly,:));
-handles = fix_UpdateFlyPathVisible(handles);
-fix_FixUpdateFly(handles,fly);
-
-set(handles.addnewtrackdoitbutton,'Enable','off');
-set(handles.addnewtrackpanel','visible','off');
-fix_EnablePanel(handles.editpanel,'on');
-
-handles = needsSave(handles);
-guidata(hObject,handles);
+% new_id = 0;
+% new_timestamp = -1;
+% for fly = 1:length( handles.trx )
+%   new_id = max( [handles.trx(fly).id + 1, new_id] );
+%   if new_timestamp == -1 && ...
+%       handles.trx(fly).firstframe <= handles.f && ...
+%       handles.trx(fly).endframe >= handles.f
+%     new_timestamp = handles.trx(fly).timestamps(handles.trx(fly).firstframe + handles.f - 1);
+%   end
+% end
+% 
+% % fill in new fly
+% fly = length( handles.trx ) + 1;
+% handles.trx(fly).id = new_id;
+% handles.trx(fly).timestamps = new_timestamp;
+% handles.trx(fly).firstframe = handles.f;
+% handles.trx(fly).off = -handles.trx(fly).firstframe + 1;
+% handles.trx(fly).endframe = handles.f;
+% handles.trx(fly).nframes = 1;
+% handles.trx(fly).moviename = handles.trx(1).moviename;
+% handles.trx(fly).arena = handles.trx(1).arena;
+% handles.trx(fly).matname = handles.trx(1).matname;
+% handles.trx(fly).pxpermm = handles.trx(1).pxpermm;
+% handles.trx(fly).fps = handles.trx(1).fps;
+% xlim = get( handles.mainaxes, 'xlim' );
+% ylim = get( handles.mainaxes, 'ylim' );
+% handles.trx(fly).x = mean( xlim );
+% handles.trx(fly).y = mean( ylim );
+% handles.trx(fly).theta = 0;
+% handles.trx(fly).a = diff( xlim )/10;
+% handles.trx(fly).b = diff( ylim )/30;
+% handles.trx(fly).xpred = handles.trx(fly).x;
+% handles.trx(fly).ypred = handles.trx(fly).y;
+% handles.trx(fly).thetapred = handles.trx(fly).theta;
+% handles.trx(fly).dx = 0;
+% handles.trx(fly).dy = 0;
+% handles.trx(fly).v = 0;
+% 
+% % save to undo list
+% handles.undolist{end+1} = {'addnew',fly};
+% 
+% % draw
+% handles.nflies = handles.nflies + 1;
+% handles = fix_SetFlyColors(handles);
+% [handles.hellipse(fly),handles.hcenter(fly),handles.hhead(fly),...
+%   handles.htail(fly),handles.hleft(fly),handles.hright(fly),...
+%   handles.htailmarker(fly),handles.hpath(fly)] = ...
+%   InitFly(handles.colors(fly,:));
+% handles = fix_UpdateFlyPathVisible(handles);
+% fix_FixUpdateFly(handles,fly);
+% 
+% set(handles.addnewtrackdoitbutton,'Enable','off');
+% set(handles.addnewtrackpanel','visible','off');
+% fix_EnablePanel(handles.editpanel,'on');
+% 
+% handles = needsSave(handles);
+% guidata(hObject,handles);
 
 function addnewtrackcancelbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to addnewtrackcancelbutton (see GCBO)
@@ -2787,3 +2808,54 @@ if ~isempty(resp)
     setpref('DTFE','playbackFPS',fps);
   end  
 end
+
+%% Wing Adjustment
+
+function pbAdjustWingsAcceptFrame_Callback(hObject, eventdata, handles)
+
+f = handles.f;
+trx = handles.trx;
+assert(numel(trx)==2);
+i1 = trx(1).off + f;
+i2 = trx(2).off + f;
+wingAng1Orig = [trx(1).wing_anglel(i1) trx(1).wing_angler(i1)];
+wingAng2Orig = [trx(2).wing_anglel(i2) trx(2).wing_angler(i2)];
+handles.undolist{end+1} = {'wingadj',f,[wingAng1Orig;wingAng2Orig]};
+
+we = handles.wingEditor;
+angAbs = we.getWingAbsAngles();
+trxtheta1 = trx(1).theta(i1);
+trxtheta2 = trx(2).theta(i2);
+wingAngL1 = modrange(angAbs(1,1)-trxtheta1-pi,-pi,pi);
+wingAngR1 = modrange(angAbs(1,2)-trxtheta1-pi,-pi,pi);
+wingAngL2 = modrange(angAbs(2,1)-trxtheta2-pi,-pi,pi);
+wingAngR2 = modrange(angAbs(2,2)-trxtheta2-pi,-pi,pi);
+
+handles.trx(1).wing_anglel(i1) = wingAngL1;
+handles.trx(1).wing_angler(i1) = wingAngR1;
+handles.trx(2).wing_anglel(i2) = wingAngL2;
+handles.trx(2).wing_angler(i2) = wingAngR2;
+handles = updateTrxXyWingLrFromWingAngles(handles,1,i1);
+handles = updateTrxXyWingLrFromWingAngles(handles,2,i2);
+
+fix_EnablePanel(handles.editpanel,'on');
+handles = needsSave(handles);
+guidata(hObject,handles);
+
+%fix_FixUpdateFly(handles,fly);
+
+function handles = updateTrxXyWingLrFromWingAngles(handles,fly,idx)
+trxI = handles.trx(fly);
+x = trxI.x(idx);
+y = trxI.y(idx);
+th = trxI.theta(idx);
+a = trxI.a(idx);
+
+wingAbsAngleL = th + pi + trxI.wing_anglel(idx);
+wingAbsAngleR = th + pi + trxI.wing_angler(idx);
+handles.trx(fly).xwingl(idx) = x + 4*a*cos(wingAbsAngleL);
+handles.trx(fly).ywingl(idx) = y + 4*a*sin(wingAbsAngleL);
+handles.trx(fly).xwingr(idx) = x + 4*a*cos(wingAbsAngleR);
+handles.trx(fly).ywingr(idx) = y + 4*a*sin(wingAbsAngleR);
+
+function pbAdjustWingsCancel_Callback(hObject, eventdata, handles)
