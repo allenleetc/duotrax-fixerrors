@@ -2948,14 +2948,14 @@ end
 %fix_FixUpdateFly(handles,fly);
 
 
-function pbAdjustWingsCollapse_Callback(hObject, eventdata, handles)
-fly = handles.selected;
-if isempty(fly)
-  errordlg('Please select a fly.','No fly selected');
-  return;
-end
-we = handles.wingEditor;
-we.collapse(fly);
+% function pbAdjustWingsCollapse_Callback(hObject, eventdata, handles)
+% fly = handles.selected;
+% if isempty(fly)
+%   errordlg('Please select a fly.','No fly selected');
+%   return;
+% end
+% we = handles.wingEditor;
+% we.collapse(fly);
 
 % function pbAdjustWingsDone_Callback(hObject, eventdata, handles)
 % we = handles.wingEditor;
