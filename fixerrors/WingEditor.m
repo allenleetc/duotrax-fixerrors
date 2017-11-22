@@ -1,4 +1,5 @@
 classdef WingEditor < handle
+  % Drag to adjust wing angles on two flies in an axis
   
   properties
     hFig
@@ -8,6 +9,7 @@ classdef WingEditor < handle
     
     xyFly % [2x2] xyFly(fly,icoord) (icoord=1/2 for x/y)
     aFly % [2x1] aFly(fly)
+    thetaFly % [2x1] thetaFly(fly)
         
     tfActivated
     dragFly % 0 (no drag in progress), 1, or 2
@@ -27,6 +29,7 @@ classdef WingEditor < handle
       obj.hLines = hlines;
       obj.xyFly = nan(2,2);
       obj.aFly = nan(2,1);
+      obj.thetaFly = nan(2,1);
             
       obj.tfActivated = false;
       obj.dragFly = 0;
@@ -35,12 +38,7 @@ classdef WingEditor < handle
   end
   
   methods
-    
-    function setFlyCenterMajorRad(obj,fly,xy,a)
-      obj.xyFly(fly,:) = xy;
-      obj.aFly(fly,:) = a;
-    end
-    
+        
     function angAbs = getWingAbsAngles(obj)
       % angAbs: [2x2] absolute angles (relative to fixed coord, not 
       % relative to fly). andAbs(fly,iwing)
@@ -57,27 +55,25 @@ classdef WingEditor < handle
       end
     end
     
-    function setActivated(obj,tf)
-      hf = obj.hFig;
-      hps = obj.hPts;
-      hls = obj.hLines;
-      if tf
-        fcnBDF = @obj.ptBDF;
-        arrayfun(@(x)set(x,'ButtonDownFcn',fcnBDF),hps);
-        arrayfun(@(x)set(x,'ButtonDownFcn',fcnBDF),hls);
-        hf.WindowButtonMotionFcn = @obj.figWBMF;
-        hf.WindowButtonUpFcn = @obj.figWBUF;
-      else
-        arrayfun(@(x)set(x,'ButtonDownFcn',[]),hps);
-        arrayfun(@(x)set(x,'ButtonDownFcn',[]),hls);
-        hf.WindowButtonMotionFcn = [];
-        hf.WindowButtonUpFcn = [];
+    function collapse(obj,fly)
+      xy = obj.xyFly(fly,:);
+      a = obj.aFly(fly,:);
+      th = obj.thetaFly(fly,:);
+      thTail = th+pi;
+      xyTail = xy + 4*a*[cos(thTail) sin(thTail)];
+
+      for iwing=1:2
+        afac = obj.wingtipConAFac(iwing);
+        xyWingtip = wingtipConFcn(xyTail,xy,a,afac);
+        set(obj.hPts(fly,iwing),'XData',xyWingtip(1),'YData',xyWingtip(2));
+        
+        hline = obj.hLines(fly,iwing);
+        hlinexdata = get(hline,'XData');
+        hlineydata = get(hline,'YData');
+        hlinexdata(2) = xyWingtip(1);
+        hlineydata(2) = xyWingtip(2);
+        set(hline,'XData',hlinexdata,'YData',hlineydata);
       end
-      if tf~=obj.tfActivated
-        obj.dragFly = 0;
-        obj.dragWing = nan;
-      end
-      obj.tfActivated = tf;
     end
     
     function ptBDF(obj,src,evt)

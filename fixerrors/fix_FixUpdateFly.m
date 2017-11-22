@@ -50,9 +50,6 @@ set(handles.hwingr(fly),'xdata',xwingradj,'ydata',ywingradj);
 set(handles.hwinglinel(fly),'xdata',[x xwingladj],'ydata',[y ywingladj]);
 set(handles.hwingliner(fly),'xdata',[x xwingradj],'ydata',[y ywingradj]);
 
-we = handles.wingEditor;
-we.setFlyCenterMajorRad(fly,[x y],a/2);
-
 i0 = ii - floor((handles.nframesplot-1)/2);
 i1 = ii + handles.nframesplot - 1;
 i0 = max(i0,1);

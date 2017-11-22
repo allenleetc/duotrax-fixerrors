@@ -46,9 +46,9 @@ end
 % else
 handles.txIsTouch.Visible = 'off';
 % end
-if ~isempty(handles.motionobj)
-  assert(false); % AL20170724, handles not returned
-  if ~isalive(handles.trx(handles,motionobj{2}),handles.f),
-    handles.motionobj = [];
-  end
-end
+% if ~isempty(handles.motionobj)
+%   assert(false); % AL20170724, handles not returned
+%   if ~isalive(handles.trx(handles.motionobj{2}),handles.f),
+%     handles.motionobj = [];
+%   end
+% end

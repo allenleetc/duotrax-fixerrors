@@ -282,12 +282,21 @@ for fly = 1:handles.nflies,
     handles.hwingl(fly),handles.hwingr(fly),...
     handles.hwinglinel(fly),handles.hwingliner(fly)] = ...
     InitFly(handles.colors(fly,:));
+  
+  cmnu = uicontextmenu;
+  uimenu('Parent',cmnu,'Label','Collapse wings',...
+    'Callback',@(s,e)cbkCollapseWings(s,e,fly));
+  set(handles.hwingl(fly),'UIContextMenu',cmnu);
+  set(handles.hwinglinel(fly),'UIContextMenu',cmnu);
+  set(handles.hwingr(fly),'UIContextMenu',cmnu);
+  set(handles.hwingliner(fly),'UIContextMenu',cmnu);
+
   handles = fix_UpdateFlyPathVisible(handles);
 end
 
-handles.wingEditor = WingEditor(...
-  [handles.hwingl(:) handles.hwingr(:)],...
-  [handles.hwinglinel(:) handles.hwingliner(:)]);
+% handles.wingEditor = WingEditor(...
+%   [handles.hwingl(:) handles.hwingr(:)],...
+%   [handles.hwinglinel(:) handles.hwingliner(:)]);
 
 for fly=1:handles.nflies
   fix_FixUpdateFly(handles,fly);
@@ -315,9 +324,13 @@ set(htail,'buttondownfcn','fixerrorsgui(''tail_buttondown'',gcbo,[],guidata(gcbo
 hcenter = plot(0,0,'o','markersize',6,'color',color,'markerfacecolor','w');
 set(hcenter,'buttondownfcn','fixerrorsgui(''center_buttondown'',gcbo,[],guidata(gcbo))');
 hwingl = plot(0,0,'+','markersize',7,'color',color,'linewidth',2);
+set(hwingl,'buttondownfcn','fixerrorsgui(''left_wing_buttondown'',gcbo,[],guidata(gcbo))');
 hwingr = plot(0,0,'o','markersize',7,'color',color,'markerfacecolor',color);
+set(hwingr,'buttondownfcn','fixerrorsgui(''right_wing_buttondown'',gcbo,[],guidata(gcbo))');
 hwinglinel = plot(0,0,'-','color',color);
+set(hwinglinel,'buttondownfcn','fixerrorsgui(''left_wing_buttondown'',gcbo,[],guidata(gcbo))');
 hwingliner = plot(0,0,'-','color',color);
+set(hwingliner,'buttondownfcn','fixerrorsgui(''right_wing_buttondown'',gcbo,[],guidata(gcbo))');
 
 function tail_buttondown(hObject,eventdata,handles)
 
@@ -366,6 +379,50 @@ fly = find(handles.hcenter==hObject);
 if isempty(fly), return; end
 handles.motionobj = {'center',fly};
 guidata(hObject,handles);
+
+function left_wing_buttondown(hObject,eventdata,handles)
+
+fly = find(handles.hwingl==hObject);
+if isempty(fly)
+  fly = find(handles.hwinglinel==hObject);
+end
+if isempty(fly), return; end
+handles.motionobj = {'leftwing',fly};
+guidata(hObject,handles);
+
+function right_wing_buttondown(hObject,eventdata,handles)
+
+fly = find(handles.hwingr==hObject);
+if isempty(fly)
+  fly = find(handles.hwingliner==hObject);
+end
+if isempty(fly), return; end
+handles.motionobj = {'rightwing',fly};
+guidata(hObject,handles);
+
+function cbkCollapseWings(src,evt,fly)
+handles = guidata(src);
+
+i = handles.trx(fly).off + handles.f;
+x = handles.trx(fly).x(i);
+y = handles.trx(fly).y(i);
+a = handles.trx(fly).a(i);
+th = handles.trx(fly).theta(i);
+
+wingAng = 0;
+handles.trx(fly).wing_anglel(i) = wingAng;
+handles.trx(fly).wing_angler(i) = wingAng;
+wingAngAbs = modrange(th+pi+wingAng,-pi,pi);
+xwing = x + 4*a*cos(wingAngAbs);
+ywing = y + 4*a*sin(wingAngAbs);
+handles.trx(fly).xwingl(i) = xwing;
+handles.trx(fly).ywingl(i) = ywing;
+handles.trx(fly).xwingr(i) = xwing;
+handles.trx(fly).ywingr(i) = ywing;
+
+fix_FixUpdateFly(handles,fly);
+
+guidata(handles.figure1,handles);
 
 function handles = move_center(fly,handles)
 
@@ -513,6 +570,53 @@ handles.trx(fly).theta(i) = theta;
 
 fix_FixUpdateFly(handles,fly);
 
+function handles = move_left_wing(fly,handles)
+xyCur = handles.mainaxes.CurrentPoint(1,:);
+xyCur = xyCur(1:2);
+
+LEFTWINGTIPCONAFAC = 4*.85;
+i = handles.trx(fly).off + handles.f;
+x = handles.trx(fly).x(i);
+y = handles.trx(fly).y(i);
+a = handles.trx(fly).a(i);
+th = handles.trx(fly).theta(i);
+
+xywingtipDisp = wingtipConFcn(xyCur,[x y],a,LEFTWINGTIPCONAFAC); % displayed wingtip; different lengths for L/R
+wingAngAbsL = atan2(xywingtipDisp(2)-y,xywingtipDisp(1)-x);
+wingAngL = modrange(wingAngAbsL-th-pi,-pi,pi);
+handles.trx(fly).wing_anglel(i) = wingAngL;
+handles.trx(fly).xwingl(i) = x + 4*a*cos(wingAngAbsL);
+handles.trx(fly).ywingl(i) = y + 4*a*sin(wingAngAbsL);
+
+fix_FixUpdateFly(handles,fly);
+
+% set(handles.hwingl(fly),'XData',xywingtip(1),'YData',xywingtip(2));
+% hline = handles.hwinglinel(fly);
+% hlinexdata = get(hline,'XData');
+% hlineydata = get(hline,'YData');
+% hlinexdata(2) = xywingtip(1);
+% hlineydata(2) = xywingtip(2);
+% set(hline,'XData',hlinexdata,'YData',hlineydata);
+
+function handles = move_right_wing(fly,handles)
+xyCur = handles.mainaxes.CurrentPoint(1,:);
+xyCur = xyCur(1:2);
+
+RIGHTWINGTIPCONAFAC = 4*1.15;
+i = handles.trx(fly).off + handles.f;
+x = handles.trx(fly).x(i);
+y = handles.trx(fly).y(i);
+a = handles.trx(fly).a(i);
+th = handles.trx(fly).theta(i);
+
+xywingtipDisp = wingtipConFcn(xyCur,[x y],a,RIGHTWINGTIPCONAFAC); % displayed wingtip; different lengths for L/R
+wingAngAbsR = atan2(xywingtipDisp(2)-y,xywingtipDisp(1)-x);
+wingAngR = modrange(wingAngAbsR-th-pi,-pi,pi);
+handles.trx(fly).wing_angler(i) = wingAngR;
+handles.trx(fly).xwingr(i) = x + 4*a*cos(wingAngAbsR);
+handles.trx(fly).ywingr(i) = y + 4*a*sin(wingAngAbsR);
+
+fix_FixUpdateFly(handles,fly);
 
 % --- Executes on slider movement.
 function frameslider_Callback(hObject, eventdata, handles)
@@ -962,7 +1066,8 @@ for ui = top:-1:1
       %       fix_FixUpdateFly( handles, fly );
     case 'correct'
       % none
-    otherwise
+      
+    otherwise % includes case 'wingadj'
       warningNoTrace('dtfe:undo','Don''t know how to undo action ''%s'', item %d\n',...
         action,ui);
   end
@@ -1106,35 +1211,33 @@ function debugbutton_Callback(hObject, eventdata, handles)
 keyboard;
 
 
-% --- Executes on mouse motion over figure - except title and menu.
 function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-if ~isfield(handles,'motionobj') || isempty(handles.motionobj), return; end
+if ~isfield(handles,'motionobj') || isempty(handles.motionobj)
+  return;
+end
 
-if strcmpi(handles.motionobj{1},'center'),
-  handles = move_center(handles.motionobj{2},handles);
-elseif strcmpi(handles.motionobj{1},'head'),
-  handles = move_head(handles.motionobj{2},handles);
-elseif strcmpi(handles.motionobj{1},'tail'),
-  handles = move_tail(handles.motionobj{2},handles);
-elseif strcmpi(handles.motionobj{1},'left'),
-  handles = move_left(handles.motionobj{2},handles);
-elseif strcmpi(handles.motionobj{1},'right'),
-  handles = move_right(handles.motionobj{2},handles);
+type = handles.motionobj{1};
+fly = handles.motionobj{2};
+if strcmpi(type,'center'),
+  handles = move_center(fly,handles);
+elseif strcmpi(type,'head'),
+  handles = move_head(fly,handles);
+elseif strcmpi(type,'tail'),
+  handles = move_tail(fly,handles);
+elseif strcmpi(type,'left'),
+  handles = move_left(fly,handles);
+elseif strcmpi(type,'right'),
+  handles = move_right(fly,handles);
+elseif strcmpi(type,'leftwing'),
+  handles = move_left_wing(fly,handles);
+elseif strcmpi(type,'rightwing'),
+  handles = move_right_wing(fly,handles);
 end
 
 guidata(hObject,handles);
 
-% --- Executes on mouse press over figure background, over a disabled or
-% --- inactive control, or over an axes background.
 function figure1_WindowButtonUpFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 handles.motionobj = [];
 guidata(hObject,handles);
 
@@ -1214,11 +1317,11 @@ elseif strcmpi( s, 'superpose tracks...' )
   handles.superposefirstfly = -1;
   set( handles.superposedoitbutton, 'visible', 'off' );
   set( handles.superposefirstflybutton, 'visible', 'on' );
-elseif strcmpi( s, 'adjust wings...' )
-  set( handles.pnlAdjustWings, 'visible', 'on' );
-  set( handles.pbAdjustWingsAcceptFrame,'enable','on' );
-  we = handles.wingEditor;
-  we.setActivated(true); % XXX WHEN UNACTIVATE
+% elseif strcmpi( s, 'adjust wings...' )
+%   set( handles.pnlAdjustWings, 'visible', 'on' );
+%   set( handles.pbAdjustWingsAcceptFrame,'enable','on' );
+%   we = handles.wingEditor;
+%   we.setActivated(true);
 else
   fprintf( 1, 'unknown action selected: %s\n', s )
 end
@@ -2811,51 +2914,50 @@ end
 
 %% Wing Adjustment
 
-function pbAdjustWingsAcceptFrame_Callback(hObject, eventdata, handles)
-
-f = handles.f;
-trx = handles.trx;
-assert(numel(trx)==2);
-i1 = trx(1).off + f;
-i2 = trx(2).off + f;
-wingAng1Orig = [trx(1).wing_anglel(i1) trx(1).wing_angler(i1)];
-wingAng2Orig = [trx(2).wing_anglel(i2) trx(2).wing_angler(i2)];
-handles.undolist{end+1} = {'wingadj',f,[wingAng1Orig;wingAng2Orig]};
-
-we = handles.wingEditor;
-angAbs = we.getWingAbsAngles();
-trxtheta1 = trx(1).theta(i1);
-trxtheta2 = trx(2).theta(i2);
-wingAngL1 = modrange(angAbs(1,1)-trxtheta1-pi,-pi,pi);
-wingAngR1 = modrange(angAbs(1,2)-trxtheta1-pi,-pi,pi);
-wingAngL2 = modrange(angAbs(2,1)-trxtheta2-pi,-pi,pi);
-wingAngR2 = modrange(angAbs(2,2)-trxtheta2-pi,-pi,pi);
-
-handles.trx(1).wing_anglel(i1) = wingAngL1;
-handles.trx(1).wing_angler(i1) = wingAngR1;
-handles.trx(2).wing_anglel(i2) = wingAngL2;
-handles.trx(2).wing_angler(i2) = wingAngR2;
-handles = updateTrxXyWingLrFromWingAngles(handles,1,i1);
-handles = updateTrxXyWingLrFromWingAngles(handles,2,i2);
-
-fix_EnablePanel(handles.editpanel,'on');
-handles = needsSave(handles);
-guidata(hObject,handles);
+% function pbAdjustWingsAcceptFrame_Callback(hObject, eventdata, handles)
+% 
+% f = handles.f;
+% trx = handles.trx;
+% assert(numel(trx)==2);
+% i1 = trx(1).off + f;
+% i2 = trx(2).off + f;
+% wingAng1Orig = [trx(1).wing_anglel(i1) trx(1).wing_angler(i1)];
+% wingAng2Orig = [trx(2).wing_anglel(i2) trx(2).wing_angler(i2)];
+% handles.undolist{end+1} = {'wingadj',f,[wingAng1Orig;wingAng2Orig]};
+% 
+% we = handles.wingEditor;
+% angAbs = we.getWingAbsAngles();
+% trxtheta1 = trx(1).theta(i1);
+% trxtheta2 = trx(2).theta(i2);
+% wingAngL1 = modrange(angAbs(1,1)-trxtheta1-pi,-pi,pi);
+% wingAngR1 = modrange(angAbs(1,2)-trxtheta1-pi,-pi,pi);
+% wingAngL2 = modrange(angAbs(2,1)-trxtheta2-pi,-pi,pi);
+% wingAngR2 = modrange(angAbs(2,2)-trxtheta2-pi,-pi,pi);
+% 
+% handles.trx(1).wing_anglel(i1) = wingAngL1;
+% handles.trx(1).wing_angler(i1) = wingAngR1;
+% handles.trx(2).wing_anglel(i2) = wingAngL2;
+% handles.trx(2).wing_angler(i2) = wingAngR2;
+% handles = updateTrxXyWingLrFromWingAngles(handles,1,i1);
+% handles = updateTrxXyWingLrFromWingAngles(handles,2,i2);
+% 
+% fix_EnablePanel(handles.editpanel,'on');
+% handles = needsSave(handles);
+% guidata(hObject,handles);
 
 %fix_FixUpdateFly(handles,fly);
 
-function handles = updateTrxXyWingLrFromWingAngles(handles,fly,idx)
-trxI = handles.trx(fly);
-x = trxI.x(idx);
-y = trxI.y(idx);
-th = trxI.theta(idx);
-a = trxI.a(idx);
 
-wingAbsAngleL = th + pi + trxI.wing_anglel(idx);
-wingAbsAngleR = th + pi + trxI.wing_angler(idx);
-handles.trx(fly).xwingl(idx) = x + 4*a*cos(wingAbsAngleL);
-handles.trx(fly).ywingl(idx) = y + 4*a*sin(wingAbsAngleL);
-handles.trx(fly).xwingr(idx) = x + 4*a*cos(wingAbsAngleR);
-handles.trx(fly).ywingr(idx) = y + 4*a*sin(wingAbsAngleR);
+function pbAdjustWingsCollapse_Callback(hObject, eventdata, handles)
+fly = handles.selected;
+if isempty(fly)
+  errordlg('Please select a fly.','No fly selected');
+  return;
+end
+we = handles.wingEditor;
+we.collapse(fly);
 
-function pbAdjustWingsCancel_Callback(hObject, eventdata, handles)
+% function pbAdjustWingsDone_Callback(hObject, eventdata, handles)
+% we = handles.wingEditor;
+% we.setActivated(false);
+% fix_ActionCancelled( hObject, handles, handles.pnlAdjustWings );
