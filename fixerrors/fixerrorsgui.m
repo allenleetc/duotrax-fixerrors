@@ -290,6 +290,7 @@ for fly = 1:handles.nflies,
   set(handles.hwinglinel(fly),'UIContextMenu',cmnu);
   set(handles.hwingr(fly),'UIContextMenu',cmnu);
   set(handles.hwingliner(fly),'UIContextMenu',cmnu);
+  set(handles.hellipse(fly),'UIContextMenu',cmnu);
 
   handles = fix_UpdateFlyPathVisible(handles);
 end
