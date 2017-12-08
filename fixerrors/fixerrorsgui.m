@@ -170,6 +170,8 @@ handles.seqTable = seqTable;
 
 %pnlSeq.Units = 'normalized';
 
+handles.fmark = nan;
+
 guidata(hObject,handles);
 
 handles = PlotFirstFrame(handles);
@@ -185,6 +187,8 @@ set(handles.editmenu,'Value',2); % swap
 handles = fix_SetSeq(handles,iseq,false); % repeat to set seqTable selected row
 
 guidata(hObject, handles);
+
+clearMark(handles);
 
 playstopbutton_Callback(handles.playstopbutton,[],handles);
 
@@ -285,7 +289,11 @@ for fly = 1:handles.nflies,
   
   cmnu = uicontextmenu;
   uimenu('Parent',cmnu,'Label','Collapse wings',...
+    'Tag','mnuCollapseWings',...
     'Callback',@(s,e)cbkCollapseWings(s,e,fly));
+  uimenu('Parent',cmnu,'Label','Collapse wings to mark',... % label gets updated at runtime
+    'Tag','mnuCollapseWingsMark',...
+    'Callback',@(s,e)cbkCollapseWingsToMark(s,e,fly));
   set(handles.hwingl(fly),'UIContextMenu',cmnu);
   set(handles.hwinglinel(fly),'UIContextMenu',cmnu);
   set(handles.hwingr(fly),'UIContextMenu',cmnu);
@@ -403,26 +411,39 @@ guidata(hObject,handles);
 
 function cbkCollapseWings(src,evt,fly)
 handles = guidata(src);
-
-i = handles.trx(fly).off + handles.f;
-x = handles.trx(fly).x(i);
-y = handles.trx(fly).y(i);
-a = handles.trx(fly).a(i);
-th = handles.trx(fly).theta(i);
-
-wingAng = 0;
-handles.trx(fly).wing_anglel(i) = wingAng;
-handles.trx(fly).wing_angler(i) = wingAng;
-wingAngAbs = modrange(th+pi+wingAng,-pi,pi);
-xwing = x + 4*a*cos(wingAngAbs);
-ywing = y + 4*a*sin(wingAngAbs);
-handles.trx(fly).xwingl(i) = xwing;
-handles.trx(fly).ywingl(i) = ywing;
-handles.trx(fly).xwingr(i) = xwing;
-handles.trx(fly).ywingr(i) = ywing;
-
-fix_FixUpdateFly(handles,fly);
-
+collapseWingsFrames(handles,fly,handles.f);
+function cbkCollapseWingsToMark(src,evt,fly)
+handles = guidata(src);
+assert(~isnan(handles.fmark));
+if handles.fmark>=handles.f
+  frms = handles.f:handles.fmark;
+else
+  frms = handles.fmark:handles.f;
+end
+collapseWingsFrames(handles,fly,frms);
+function collapseWingsFrames(handles,fly,frms)
+trxFly = handles.trx(fly);
+for f=frms(:)'
+  i = trxFly.off + f;
+  x = trxFly.x(i);
+  y = trxFly.y(i);
+  a = trxFly.a(i);
+  th = trxFly.theta(i);
+  
+  wingAng = 0;
+  handles.trx(fly).wing_anglel(i) = wingAng;
+  handles.trx(fly).wing_angler(i) = wingAng;
+  wingAngAbs = modrange(th+pi+wingAng,-pi,pi);
+  xwing = x + 4*a*cos(wingAngAbs);
+  ywing = y + 4*a*sin(wingAngAbs);
+  handles.trx(fly).xwingl(i) = xwing;
+  handles.trx(fly).ywingl(i) = ywing;
+  handles.trx(fly).xwingr(i) = xwing;
+  handles.trx(fly).ywingr(i) = ywing;
+end
+if any(handles.f==frms)
+  fix_FixUpdateFly(handles,fly);
+end
 guidata(handles.figure1,handles);
 
 function handles = move_center(fly,handles)
@@ -2701,14 +2722,19 @@ end
 
 axpos = get(handles.mainaxes,'Position');
 txpos = get(handles.txMoviename,'Position');
+mspos = get(handles.txMarkFrame,'Position');
 
 axpos(4) = figpos(4)-axpos(2)-txpos(4);
 maxdright = max([handles.upperrightpanel_dright(:);handles.lowerrightpanel_dright(:)]);
 axpos(3) = figpos(3)-maxdright-10;
 set(handles.mainaxes,'Position',axpos);
 txpos(2) = axpos(2)+axpos(4);
-txpos(3) = axpos(3);
+txpos(3) = axpos(3)/2;
+mspos(1) = axpos(1)+axpos(3)/2;
+mspos(2) = txpos(2);
+mspos(3) = axpos(3)/2;
 set(handles.txMoviename,'Position',txpos);
+set(handles.txMarkFrame,'Position',mspos);
 
 ntags = numel(handles.bottom_tags);
 for fni = 1:ntags
@@ -2727,7 +2753,16 @@ function figure1_KeyPressFcn(hObject, eventdata, handles)
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
 
-switch eventdata.Key
+mdfr = eventdata.Modifier;
+key = eventdata.Key;
+
+switch key
+  case 'space'    
+    if isscalar(mdfr) && strcmp(mdfr,'control')
+      setMark(handles);
+    elseif isscalar(mdfr) && strcmp(mdfr,'shift')
+      clearMark(handles);
+    end    
   case {'leftarrow' 'rightarrow' 'downarrow' 'uparrow'}
     switch eventdata.Key
       case 'leftarrow'
@@ -2746,7 +2781,6 @@ switch eventdata.Key
   otherwise
     % none
 end
-
 
 % --- Executes on button press in flipimage_checkbox.
 function flipimage_checkbox_Callback(hObject, eventdata, handles)
@@ -2911,6 +2945,36 @@ if ~isempty(resp)
   if ~isnan(fps)
     setpref('DTFE','playbackFPS',fps);
   end  
+end
+
+function setMark(handles)
+handles.fmark = handles.f;
+guidata(handles.figure1,handles);
+updateTxMarkFrame(handles);
+updateFlyContextMenus(handles);
+function clearMark(handles)
+handles.fmark = nan;
+guidata(handles.figure1,handles);
+updateTxMarkFrame(handles);
+updateFlyContextMenus(handles);
+function updateTxMarkFrame(handles)
+if ~isnan(handles.fmark)
+  str = sprintf('Mark set (frame %d)',handles.fmark);
+  set(handles.txMarkFrame,'String',str,'Visible','on');
+else
+  set(handles.txMarkFrame,'Visible','off');
+end
+function updateFlyContextMenus(handles)
+tfmarkset = ~isnan(handles.fmark);
+for fly=1:handles.nflies
+  hCM = get(handles.hwingl(fly),'UIContextMenu');  
+  hMenu = findobj(hCM.Children,'Tag','mnuCollapseWingsMark');
+  if tfmarkset
+    str = sprintf('Collapse wings to mark (frame %d)',handles.fmark);
+    set(hMenu,'Label',str,'Visible','on');
+  else
+    set(hMenu,'Visible','off');
+  end
 end
 
 %% Wing Adjustment
