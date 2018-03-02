@@ -23,34 +23,35 @@ if ~isfirstframe
   seqTable.setSelectedRows(seqi);
 end
 
-% set fly colors so that flies that are close have different colors
-x = nan(1,handles.nflies);
-y = nan(1,handles.nflies);
-f = round(mean([seq.frames(1),seq.frames(end)]));
-for fly = 1:handles.nflies,
-  if ~isalive(handles.trx(fly),f),
-    continue;
-  end
-  i = handles.trx(fly).off+(f);
-  x(fly) = handles.trx(fly).x(i);
-  y(fly) = handles.trx(fly).y(i);
-end
+% AL20180302: unnec for JS and requires stats toolbox
+% % set fly colors so that flies that are close have different colors
+% x = nan(1,handles.nflies);
+% y = nan(1,handles.nflies);
+% f = round(mean([seq.frames(1),seq.frames(end)]));
+% for fly = 1:handles.nflies,
+%   if ~isalive(handles.trx(fly),f),
+%     continue;
+%   end
+%   i = handles.trx(fly).off+(f);
+%   x(fly) = handles.trx(fly).x(i);
+%   y(fly) = handles.trx(fly).y(i);
+% end
 
-D = squareform(pdist([x;y]'));
-handles.colors(seq.flies,:) = handles.colors0(handles.colororder(1:length(seq.flies)),:);
-isassigned = false(1,handles.nflies);
-isassigned(seq.flies) = true;
-D(:,seq.flies) = nan;
-for i = length(seq.flies)+1:handles.nflies,
-  [mind,fly] = min(min(D(isassigned,:),[],1));
-  if isnan(mind),
-    handles.colors(~isassigned,:) = handles.colors0(handles.colororder(i:end),:);
-    break;
-  end
-  handles.colors(fly,:) = handles.colors0(handles.colororder(i),:);
-  isassigned(fly) = true;
-  D(:,fly) = nan;
-end
+% D = squareform(pdist([x;y]'));
+% handles.colors(seq.flies,:) = handles.colors0(handles.colororder(1:length(seq.flies)),:);
+% isassigned = false(1,handles.nflies);
+% isassigned(seq.flies) = true;
+% D(:,seq.flies) = nan;
+% for i = length(seq.flies)+1:handles.nflies,
+%   [mind,fly] = min(min(D(isassigned,:),[],1));
+%   if isnan(mind),
+%     handles.colors(~isassigned,:) = handles.colors0(handles.colororder(i:end),:);
+%     break;
+%   end
+%   handles.colors(fly,:) = handles.colors0(handles.colororder(i),:);
+%   isassigned(fly) = true;
+%   D(:,fly) = nan;
+% end
 
 if isfield(handles,'hpath'),
   for fly = 1:handles.nflies,

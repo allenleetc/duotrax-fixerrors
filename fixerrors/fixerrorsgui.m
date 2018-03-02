@@ -294,6 +294,9 @@ for fly = 1:handles.nflies,
   uimenu('Parent',cmnu,'Label','Collapse wings to mark',... % label gets updated at runtime
     'Tag','mnuCollapseWingsMark',...
     'Callback',@(s,e)cbkCollapseWingsToMark(s,e,fly));
+  uimenu('Parent',cmnu,'Label','Set wings to mark',... % label gets updated at runtime
+    'Tag','mnuSetWingsMark',...
+    'Callback',@(s,e)cbkSetWingsToMark(s,e,fly));  
   set(handles.hwingl(fly),'UIContextMenu',cmnu);
   set(handles.hwinglinel(fly),'UIContextMenu',cmnu);
   set(handles.hwingr(fly),'UIContextMenu',cmnu);
@@ -409,6 +412,21 @@ if isempty(fly), return; end
 handles.motionobj = {'rightwing',fly};
 guidata(hObject,handles);
 
+function [i,x,y,a,b,th,wal,war] = hlpReadScalarTrx(trx1,frm)
+assert(isscalar(trx1));
+i = trx1.off + frm;
+x = trx1.x(i);
+y = trx1.y(i);
+a = trx1.a(i);
+b = trx1.b(i);
+th = trx1.theta(i);
+wal = trx1.wing_anglel(i);
+war = trx1.wing_angler(i);
+% xwl = trx1.xwingl(i);
+% ywl = trx1.ywingl(i);
+% xwr = trx1.xwingr(i);
+% ywr = trx1.ywingr(i);
+
 function cbkCollapseWings(src,evt,fly)
 handles = guidata(src);
 collapseWingsFrames(handles,fly,handles.f);
@@ -424,12 +442,8 @@ collapseWingsFrames(handles,fly,frms);
 function collapseWingsFrames(handles,fly,frms)
 trxFly = handles.trx(fly);
 for f=frms(:)'
-  i = trxFly.off + f;
-  x = trxFly.x(i);
-  y = trxFly.y(i);
-  a = trxFly.a(i);
-  th = trxFly.theta(i);
-  
+  [i,x,y,a,~,th] = hlpReadScalarTrx(trxFly,f);
+    
   wingAng = 0;
   handles.trx(fly).wing_anglel(i) = wingAng;
   handles.trx(fly).wing_angler(i) = wingAng;
@@ -440,6 +454,37 @@ for f=frms(:)'
   handles.trx(fly).ywingl(i) = ywing;
   handles.trx(fly).xwingr(i) = xwing;
   handles.trx(fly).ywingr(i) = ywing;
+end
+if any(handles.f==frms)
+  fix_FixUpdateFly(handles,fly);
+end
+guidata(handles.figure1,handles);
+function cbkSetWingsToMark(src,evt,fly)
+handles = guidata(src);
+assert(~isnan(handles.fmark));
+if handles.fmark>=handles.f
+  frms = handles.f:handles.fmark;
+else
+  frms = handles.fmark:handles.f;
+end
+setWingsFrames(handles,fly,frms,handles.fmark);
+function setWingsFrames(handles,fly,frms,frm0)
+% Set the wing fields for fly, throughout frms, such that the wing_anglel
+% and wing_angler match that for fly @ frm0
+
+trxFly = handles.trx(fly);
+[~,~,~,~,~,~,wal0,war0] = hlpReadScalarTrx(trxFly,frm0);
+
+for f=frms(:)'
+  [i,x,y,a,~,th] = hlpReadScalarTrx(trxFly,f);
+  handles.trx(fly).wing_anglel(i) = wal0;
+  handles.trx(fly).wing_angler(i) = war0;
+  wAngAbsL = th + pi + wal0;
+  wAngAbsR = th + pi + war0;
+  handles.trx(fly).xwingl(i) = x + 4*a*cos(wAngAbsL);
+  handles.trx(fly).ywingl(i) = y + 4*a*sin(wAngAbsL);
+  handles.trx(fly).xwingr(i) = x + 4*a*cos(wAngAbsR);
+  handles.trx(fly).ywingr(i) = y + 4*a*sin(wAngAbsR);
 end
 if any(handles.f==frms)
   fix_FixUpdateFly(handles,fly);
@@ -2967,13 +3012,18 @@ end
 function updateFlyContextMenus(handles)
 tfmarkset = ~isnan(handles.fmark);
 for fly=1:handles.nflies
-  hCM = get(handles.hwingl(fly),'UIContextMenu');  
-  hMenu = findobj(hCM.Children,'Tag','mnuCollapseWingsMark');
+  hCM = get(handles.hwingl(fly),'UIContextMenu');
+  hChilds = hCM.Children;
+  hMnuCollapse = findobj(hChilds,'Tag','mnuCollapseWingsMark');
+  hMnuSet = findobj(hChilds,'Tag','mnuSetWingsMark');
   if tfmarkset
     str = sprintf('Collapse wings to mark (frame %d)',handles.fmark);
-    set(hMenu,'Label',str,'Visible','on');
+    set(hMnuCollapse,'Label',str,'Visible','on');
+    str = sprintf('Set wings to mark (frame %d)',handles.fmark);
+    set(hMnuSet,'Label',str,'Visible','on');    
   else
-    set(hMenu,'Visible','off');
+    set(hMnuCollapse,'Visible','off');
+    set(hMnuSet,'Visible','off');
   end
 end
 
