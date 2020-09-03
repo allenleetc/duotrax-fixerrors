@@ -1,12 +1,5 @@
 function fixerrors(varargin)
 
-%% path
-mpath = mfilename('fullpath');
-mpath = fileparts(mpath);
-addpath(mpath);
-addpath(fullfile(mpath,'JavaTableWrapper'));
-setuppath;
-
 [includeTouch] = myparse(varargin,...
   'includeTouch',false);
 
