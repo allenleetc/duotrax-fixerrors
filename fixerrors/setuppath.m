@@ -50,6 +50,8 @@ if isempty(CTRAXFIXERRORSSETUPPATHHASBEENCALLED) || ~CTRAXFIXERRORSSETUPPATHHASB
   if ~isempty( which( 'version_ctrax' ) )
      fprintf('       Your version of this toolbox is %s.\n', version_ctrax() );
   end
+  fprintf('\n\n\n           Updated for DuoTrax-FixErrors\n\n');
+  fprintf('   http://github.com/allenleetc/duotrax-fixerrors\n\n');
   fprintf('*********************************************************\n\n\n\n');
   CTRAXFIXERRORSSETUPPATHHASBEENCALLED = true;
 end
