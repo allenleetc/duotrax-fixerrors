@@ -1,5 +1,4 @@
 % Modified by Allen Lee for DTFE in 2017
-% Modified by Cristian Goina for DTFE in 2020
 function fixerrors(varargin)
 
 %% path
