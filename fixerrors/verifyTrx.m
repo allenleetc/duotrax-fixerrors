@@ -1,6 +1,8 @@
 function verifyTrx(trxfilename,abstol,reltol)
 % Perform various checks on a trxfile
 
+% Added by Allen Lee for DTFE in 2018
+
 if exist('abstol','var')==0
   abstol = 1e-6;
 end

@@ -2,6 +2,8 @@ function fix_PlotFrame(handles)
 % plot a single video frame
 % splintered from fixerrorsgui 6/21/12 JAB
 
+% Modified by Allen Lee for DTFE in 2017
+
 % plot image
 im = handles.readframe(handles.f);
 if handles.flipud

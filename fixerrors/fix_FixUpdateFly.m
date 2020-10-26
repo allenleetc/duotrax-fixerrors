@@ -1,6 +1,7 @@
 function fix_FixUpdateFly(handles,fly)
 % sets fly plot properties based on fly data
 % splintered from fixerrorsgui 6/21/12 JAB
+% Modified by Allen Lee for DTFE in 2017
 
 if isdummytrk(handles.trx(fly))
   return;

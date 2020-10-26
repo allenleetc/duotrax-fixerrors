@@ -1,4 +1,7 @@
 classdef WingEditor < handle
+
+% Added by Allen Lee for DTFE in 2017
+
   % Drag to adjust wing angles on two flies in an axis
   
   properties

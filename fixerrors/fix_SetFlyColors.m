@@ -1,6 +1,7 @@
 function handles = SetFlyColors(handles)
 % set the order we will assign colors to flies
 % splintered from fixerrorsgui 6/23/12 JAB
+% Modified by Allen Lee for DTFE in 2018
 
 % AL20180302 unnec for JS and requires toolbox
 % D = squareform(pdist((1:handles.nflies)'));

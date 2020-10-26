@@ -1,6 +1,7 @@
 function handles = fix_SetSeq(handles,seqi,isfirstframe)
 % set the GUI state for displaying a particular sequence index
 % splintered from fixerrorsgui 6/23/12 JAB
+% Modified by Allen Lee for DTFE in 2017-8
 
 if exist('isfirstframe','var')==0
   isfirstframe = false;

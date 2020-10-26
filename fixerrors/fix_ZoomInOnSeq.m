@@ -1,6 +1,7 @@
 function fix_ZoomInOnSeq(handles,seq)
 % set plot axes to show a particular sequence number
 % splintered from fixerrorsgui 6/21/12 JAB
+% Modified by Allen Lee for DTFE in 2017
 
 if strcmpi(handles.zoommode,'whole arena'),
   return;

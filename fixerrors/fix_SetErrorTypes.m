@@ -2,7 +2,8 @@ function [tfdone,nexttype] = fix_SetErrorTypes(handles)
 % * Find remaining uncorrected seqs in handles.seqs
 % * Set nexterrortype menu based on remaining seqs
 % * Set pbCorrect string based on done-ness
-% 
+
+% Modified by Allen Lee for DTFE in 2017
 % tfdone: scalar logical. if true, there are no remaining seqs
 % nexttype: char. Next type to consider. Indeterminate if tfdone==true.
 

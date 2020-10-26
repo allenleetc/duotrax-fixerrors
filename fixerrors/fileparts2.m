@@ -1,5 +1,7 @@
 function varargout = fileparts2(name)
 
+% Added by Allen Lee for DTFE in 2017
+
 [p,f,e] = fileparts(name);
 varargout{1} = p;
 if nargout > 2

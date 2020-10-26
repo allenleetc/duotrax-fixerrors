@@ -18,6 +18,9 @@
 % fracframesisback, expbgfgmodel_filename, use_expbgfgmodel, 
 % expbgfgmodel_llr_thresh, min_frac_frames_isback,
 % background_center, background_dev, movie_height, movie_width
+
+% Modified by Allen Lee for DTFE in 2017
+
 function varargout = read_ann(filename,varargin)
 
 [p,f,e] = fileparts(filename);

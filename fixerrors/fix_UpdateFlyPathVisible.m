@@ -1,6 +1,7 @@
 function handles = UpdateFlyPathVisible(handles)
 % makes fly path visible or invisible
 % splintered from fixerrorsgui 6/21/12 JAB
+% Modified by Allen Lee for DTFE in 2017
 
 %%%% this code should probably be merged into fix_FixUpdateFly, since they're *almost*
 %%%% always called together and contain some duplicated logic

@@ -26,6 +26,7 @@ else
 end
 % End initialization code - DO NOT EDIT
 
+% Modified by Allen Lee, Jasper Simon for DTFE in 2017-8
 function fixerrorsgui_OpeningFcn(hObject, eventdata, handles, varargin)
 
 handles.output = hObject;

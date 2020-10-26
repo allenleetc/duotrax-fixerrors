@@ -2,6 +2,7 @@ function trk1 = fix_CatTracks(trk1,trk2)
 % concatenates trk2 onto trk1
 % does not copy all fields -- convert_units must be re-run on the output track
 % splintered from fixerrorsgui 6/21/12 JAB
+% Modified by Allen Lee for DTFE in 2017
 
 flds = fieldnames(trk1);
 assert(isequal(flds,fieldnames(trk2)));

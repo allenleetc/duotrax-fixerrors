@@ -1,6 +1,8 @@
 function trk = fix_GetPartOfTrack(trk,f0,f1)
 % return subset of the input trx from frame f0 to f1
 
+% Modified by Allen Lee for DTFE in 2017
+
 i0 = trk.off+(f0);
 i1 = trk.off+(f1);
 i0 = max(1,i0);

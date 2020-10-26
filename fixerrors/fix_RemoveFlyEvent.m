@@ -1,6 +1,7 @@
 function [handles, seqs_removed] = RemoveFlyEvent(handles,fly,f0,f1)
 % remove all suspicious sequences involving fly in frames f0 to f1
 % splintered from fixerrorsgui 6/23/12 JAB
+% Modified by Allen Lee for DTFE in 2017
 
 assert(false);
 

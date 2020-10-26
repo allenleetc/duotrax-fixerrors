@@ -1,4 +1,5 @@
 classdef SeqTable < handle
+% Added by Allen Lee for DTFE in 2017
   
   properties
     hParent

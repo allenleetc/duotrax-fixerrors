@@ -1,7 +1,7 @@
 function handles = fix_StorePanelPositions(handles)
 % store the positions of the panels in the GUI
 % splintered from fixerrorsgui 6/23/12 JAB
-
+% Modified by Allen Lee for DTFE in 2017
 figpos = get(handles.figure1,'Position');
 
 handles.upperrightpanel_tags = {'editpanel' 'swappanel' 'flippanel'};

@@ -1,6 +1,7 @@
 function fix_SetFrameNumber(handles,hObject)
 % show the current frame
 % splintered from fixerrorsgui 6/21/12 JAB
+% Modified by Allen Lee for DTFE in 2017
 
 if nargin < 2,
   hObject = -1;
