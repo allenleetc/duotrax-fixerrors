@@ -1,6 +1,6 @@
 # DuoTrax FixErrors #
 
-DuoTrax/Fixerrors is a working prototype based on Ctrax/Fixerrors. It is specialized for two-fly tracking.
+DuoTrax/Fixerrors (or "DTFE") is a specialization of [Ctrax/Fixerrors](http://ctrax.sourceforge.net/) for two-fly tracking. It was developed in 2017 by Allen Lee and Jasper Simon in the Heberlein Lab at Janelia Research Campus.
 
 ### Requirements ###
 
@@ -12,7 +12,6 @@ Just git clone or download the repo. In Matlab, navigate to <DuoTraxFixErrors>/f
 
 ### Open Issues ###
 * When trx with wingtracking are supplied, "Flip Orientations" does not do anything intelligent with the wing fields .wing_anglel, .wing_angler, etc. These remain unchanged.
-
 
 ### Startup ###
 
@@ -55,3 +54,14 @@ While browsing the movie, if there is an issue, again, you can use the Edit Tool
 After making all corrections, you can play the entire movie start to finish. When making corrections using Suspicious Sequences, it is possible that the flies get exchanged when they are relatively far apart. 
 
 This is a prototype and there are some rough edges and clunky behavior. We can iterate and streamline to improve the workflow.
+
+### Open Source ###
+We thank Ctrax and the broader open-source community for enabling this project. DTFE uses the following open-source code:
+
+Kristin Branson, Alice Robie, John Bender, Pietro Perona, Michael Dickinson
+Ctrax: The Caltech Multiple Walking Fly Tracker
+http://ctrax.sourceforge.net/
+
+Robyn Jackey
+Java Table Wrapper for User Interfaces 
+https://www.mathworks.com/matlabcentral/fileexchange/49994-java-table-wrapper-for-user-interfaces
