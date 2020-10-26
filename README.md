@@ -58,6 +58,7 @@ This is a prototype and there are some rough edges and clunky behavior. We can i
 ### Open Source ###
 We thank Ctrax and the broader open-source community for enabling this project. DTFE uses the following open-source code:
 
+```
 Kristin Branson, Alice Robie, John Bender, Pietro Perona, Michael Dickinson
 Ctrax: The Caltech Multiple Walking Fly Tracker
 http://ctrax.sourceforge.net/
@@ -65,3 +66,4 @@ http://ctrax.sourceforge.net/
 Robyn Jackey
 Java Table Wrapper for User Interfaces 
 https://www.mathworks.com/matlabcentral/fileexchange/49994-java-table-wrapper-for-user-interfaces
+```
